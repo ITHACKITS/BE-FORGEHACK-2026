@@ -1,0 +1,18 @@
+{
+  "run_id": "run_e597ca1f4b21",
+  "hazard": "volcano",
+  "cropland_exposed_ha": {
+    "min": 33386.2,
+    "median": 52526.8,
+    "max": 52955.6
+  },
+  "water_sources_exposed_count": {
+    "min": 95,
+    "median": 150,
+    "max": 151
+  },
+  "ash_wetness_warning": "Hujan lebat di lereng yang tertimbun endapan abu tebal dapat melipatgandakan beban struktur atap dan memicu aliran lahar dingin di daerah aliran sungai (DAS).",
+  "source": "ESA WorldCover & OpenStreetMap Waterways (D17, D20)",
+  "scenario_label": "kejadian observasi",
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD."
+}

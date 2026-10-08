@@ -1,0 +1,12 @@
+{
+  "type": "FeatureCollection",
+  "properties": {
+    "hour": 6,
+    "thresholds": {
+      "min": 0.9,
+      "mid": 0.5,
+      "max": 0.05
+    }
+  },
+  "features": []
+}

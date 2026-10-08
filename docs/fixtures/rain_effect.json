@@ -1,0 +1,18 @@
+{
+  "run_id": "run_e597ca1f4b21",
+  "hazard": "volcano",
+  "population_exposure_reduced": {
+    "min": 65653.3,
+    "median": 105995.6,
+    "max": 109729.4
+  },
+  "area_footprint_reduced_km2": {
+    "min": 209.9,
+    "median": 330.2,
+    "max": 332.9
+  },
+  "scavenging_reduction_percentage": 22.0,
+  "hazard_specific_warning": "Hujan pencuci mempercepat jatuhnya partikel abu halus lebih dekat ke kawah. PERINGATAN: Abu basah jauh lebih berat di atap bangunan dan dapat memicu aliran lahar dingin di sungai.",
+  "scenario_label": "kejadian observasi",
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD."
+}

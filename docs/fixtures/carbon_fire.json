@@ -1,0 +1,23 @@
+{
+  "total_co2e_tonnes": {
+    "min": 3119745.5,
+    "median": 4275206.8,
+    "max": 5199575.8
+  },
+  "peat_emissions_tonnes": {
+    "min": 1610191.2,
+    "median": 2206558.3,
+    "max": 2683652.0
+  },
+  "non_peat_emissions_tonnes": {
+    "min": 1509554.3,
+    "median": 2068648.5,
+    "max": 2515923.8
+  },
+  "unit": "metric_tonnes_co2e",
+  "duration_hours": 48.0,
+  "source": "Wooster dkk. 2005 & Li dkk. 2018 (D13)",
+  "caveat": "Rentang dihitung dari variasi faktor FRP-ke-biomassa 0.27-0.45 kg/MJ dan fraksi gambut.",
+  "run_id": "run_60556b14f484",
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD."
+}

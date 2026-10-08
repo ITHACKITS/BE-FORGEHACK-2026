@@ -1,0 +1,21 @@
+# Konfigurasi Karakteristik Bahaya UdaraSiaga
+
+volcano:
+  name: "Gunung Meletus (Volcanic Ash)"
+  particle_type: "tephra"
+  default_domain_km: [300, 300]
+  grid_resolution_deg: 0.02
+  default_time_step_min: 5
+  max_horizon_hours: 48
+  settling_velocity_enabled: true
+  density_kg_m3: 2500
+
+fire:
+  name: "Kebakaran Hutan dan Lahan (Wildfire Smoke)"
+  particle_type: "smoke_pm25"
+  default_buffer_km: 150
+  grid_resolution_deg: 0.02
+  default_time_step_min: 5
+  max_horizon_hours: 48
+  mixed_layer_height_m: 1200
+  settling_velocity_enabled: false

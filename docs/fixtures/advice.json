@@ -1,0 +1,18 @@
+{
+  "hazard": "volcano",
+  "sourced_advice": [
+    {
+      "action": "Mengurangi aktivitas luar rumah dan memakai masker penutup hidung dan mulut",
+      "target_audience": "Masyarakat di wilayah terdampak hujan abu lebat",
+      "status": "sourced",
+      "source": "Laporan Badan Geologi Kementerian ESDM tanggal 7 September 2026",
+      "source_url": "https://geologi.esdm.go.id/media-center/perkembangan-erupsi-gunungapi-anak-krakatau-tanggal-7-september-2026",
+      "verified_on": "2026-10-05"
+    }
+  ],
+  "additional_guidance": {
+    "available": false,
+    "reason": "Saran tindakan mitigasi lanjutan (evakuasi, penutupan bandara) memerlukan arahan otoritas resmi BPBD/PVMBG dan tidak digeneralisasi otomatis oleh simulasi."
+  },
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD."
+}

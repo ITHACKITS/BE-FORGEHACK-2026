@@ -1,0 +1,13 @@
+{
+  "status": "healthy",
+  "project": "UdaraSiaga",
+  "version": "0.1.0",
+  "offline_mode": true,
+  "active_sources": {
+    "open_meteo": "active (ensemble + offline cache)",
+    "firms": "active (offline cache / live API)",
+    "worldpop": "active (local 100m grid)",
+    "overpass": "active (local facility cache)"
+  },
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti instruksi resmi dari PVMBG, BMKG, dan BPBD."
+}

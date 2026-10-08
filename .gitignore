@@ -1,0 +1,34 @@
+﻿# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# IDE & Caches
+.cursor/
+.claude/
+.deepeval/
+.vscode/
+.idea/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+
+# SQLite Journal
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+
+# Run Outputs
+data/runs/*.json
+!data/runs/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

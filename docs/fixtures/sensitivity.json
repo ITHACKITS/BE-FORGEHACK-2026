@@ -1,0 +1,44 @@
+{
+  "run_id": "run_e597ca1f4b21",
+  "parameter_swept": "column_height_km",
+  "sensitivity_curve": [
+    {
+      "parameter_value": 5.0,
+      "unit": "km",
+      "median_population_exposed": 138360.2,
+      "median_area_km2": 431.0
+    },
+    {
+      "parameter_value": 8.0,
+      "unit": "km",
+      "median_population_exposed": 322423.8,
+      "median_area_km2": 1004.3
+    },
+    {
+      "parameter_value": 10.0,
+      "unit": "km",
+      "median_population_exposed": 481798.1,
+      "median_area_km2": 1500.8
+    },
+    {
+      "parameter_value": 12.0,
+      "unit": "km",
+      "median_population_exposed": 668946.4,
+      "median_area_km2": 2083.8
+    },
+    {
+      "parameter_value": 15.0,
+      "unit": "km",
+      "median_population_exposed": 999607.1,
+      "median_area_km2": 3113.8
+    },
+    {
+      "parameter_value": 18.0,
+      "unit": "km",
+      "median_population_exposed": 1387891.7,
+      "median_area_km2": 4323.3
+    }
+  ],
+  "caveat": "Kurva sensitivitas menunjukkan elastisitas dampak terhadap perubahan satu parameter.",
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD."
+}

@@ -1,0 +1,370 @@
+{
+  "run_a": {
+    "run_id": "run_e597ca1f4b21",
+    "mode": "auto",
+    "scenario_label": "kejadian observasi",
+    "impact": {
+      "run_id": "run_e597ca1f4b21",
+      "scenario_label": "kejadian observasi",
+      "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD.",
+      "assumptions_used": [
+        {
+          "parameter": "ispu_pm25_24h_ugm3",
+          "value": {
+            "baik": [
+              0,
+              15.5
+            ],
+            "sedang": [
+              15.6,
+              55.4
+            ],
+            "tidak_sehat": [
+              55.5,
+              150.4
+            ],
+            "sangat_tidak_sehat": [
+              150.5,
+              250.4
+            ],
+            "berbahaya": [
+              250.5,
+              null
+            ]
+          },
+          "status": "sourced_secondary",
+          "source": "Permen LHK P.14/2020 (https://peraturan.go.id/files/bn774-2020.pdf); rentang dikonfirmasi lewat Katadata yang mengutip BMKG",
+          "caveat": "Tabel lampiran berupa gambar. Cek visual sebelum status diubah ke sourced."
+        },
+        {
+          "parameter": "ispu_requires_sourced_emission_factor",
+          "value": true,
+          "status": "modeling_choice",
+          "source": "Keputusan desain: cegah kategori ISPU yang tampak presisi dari faktor emisi placeholder",
+          "caveat": null
+        },
+        {
+          "parameter": "frp_to_dry_matter_kg_per_mj",
+          "value": {
+            "low": 0.27,
+            "mode": 0.37,
+            "high": 0.45
+          },
+          "status": "sourced_range",
+          "source": "Wooster dkk. 2005 doi:10.1029/2005JD006318; Li dkk. 2018 (https://repository.library.noaa.gov/view/noaa/48652)",
+          "caveat": "Percobaan 0.368-0.453; satelit CONUS 0.266-0.374; antar-ekoregion 0.18-1.9. Belum divalidasi untuk gambut tropis."
+        },
+        {
+          "parameter": "mer_from_column_height",
+          "value": {
+            "formula": "M = c * H^p",
+            "c": 140.85,
+            "p": 4.15,
+            "unit_M": "kg/s",
+            "unit_H": "km",
+            "uncertainty_factor_50pct": 4,
+            "dre_density_kg_m3": 2500,
+            "h_reference": "above_vent"
+          },
+          "status": "sourced",
+          "source": "Mastin dkk. 2009 doi:10.1016/j.jvolgeores.2009.01.008",
+          "caveat": "H diukur di atas kawah (above vent level). c=140.85 kg/s dan p=4.15 diturunkan dari H=2.00*V^0.241 dengan kerapatan DRE 2500 kg/m^3. Ketidakpastian faktor ~4."
+        },
+        {
+          "parameter": "mer_lognormal_sigma_ln",
+          "value": 2.06,
+          "status": "modeling_choice",
+          "source": "ln 4 / 0.6745 dari faktor empat pada interval 50 persen",
+          "caveat": null
+        },
+        {
+          "parameter": "peak_phase_duration_h",
+          "value": 6.0,
+          "status": "assumption_placeholder",
+          "source": null,
+          "caveat": "Berapa lama puncak awan abu ~15 km bertahan. Belum ada sumber pasti untuk Anak Krakatau 2026-09. Wajib berlabel asumsi."
+        },
+        {
+          "parameter": "tier_thresholds",
+          "value": {
+            "min": 0.9,
+            "mid": 0.5,
+            "max": 0.05
+          },
+          "status": "assumption_placeholder",
+          "source": null,
+          "caveat": null
+        },
+        {
+          "parameter": "rain_scavenging",
+          "value": {
+            "a": 0.0001,
+            "b": 0.8
+          },
+          "status": "assumption_placeholder",
+          "source": null,
+          "caveat": null
+        },
+        {
+          "parameter": "emission_factor_pm25_g_per_kg",
+          "value": {
+            "forest": 15.0,
+            "peat": 25.0,
+            "agriculture": 10.0
+          },
+          "status": "assumption_placeholder",
+          "source": "Placeholder literatur emisi gambut/biomassa. Belum diverifikasi (D13b).",
+          "caveat": "Selama berstatus placeholder, kategori ISPU dinonaktifkan sesuai Prinsip 11 AGENTS.md."
+        },
+        {
+          "parameter": "fine_ash_fraction",
+          "value": {
+            "basaltic_min": 0.01,
+            "silicic_max": 0.5,
+            "krakatau_default": 0.05
+          },
+          "status": "sourced_secondary",
+          "source": "Mastin dkk. 2009 doi:10.1016/j.jvolgeores.2009.01.008",
+          "caveat": "Fraksi abu halus (< 63 um) untuk tipe erupsi basaltik/andesitik berkisar 0.01 - 0.50."
+        }
+      ],
+      "population_exposed": {
+        "min": 298424.0,
+        "median": 481798.1,
+        "max": 498770.2
+      },
+      "children_exposed": {
+        "min": 71621.8,
+        "median": 115631.5,
+        "max": 119704.9
+      },
+      "elderly_exposed": {
+        "min": 19397.6,
+        "median": 31316.9,
+        "max": 32420.1
+      },
+      "schools_exposed": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "healthcare_exposed": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "airports_exposed": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "area_exposed_km2": {
+        "min": 953.9,
+        "median": 1500.8,
+        "max": 1513.0
+      },
+      "ispu": {
+        "available": false,
+        "reason": "Kategori ISPU dinonaktifkan: faktor emisi PM2.5 (D13b) belum berstatus sourced* (Prinsip 11 AGENTS.md).",
+        "relative_risk_index": {
+          "min": 1.2,
+          "median": 2.5,
+          "max": 4.1
+        }
+      }
+    }
+  },
+  "run_b": {
+    "run_id": "run_d403053654bc",
+    "mode": "experiment",
+    "scenario_label": "skenario hipotetis",
+    "impact": {
+      "run_id": "run_d403053654bc",
+      "scenario_label": "skenario hipotetis",
+      "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD.",
+      "assumptions_used": [
+        {
+          "parameter": "ispu_pm25_24h_ugm3",
+          "value": {
+            "baik": [
+              0,
+              15.5
+            ],
+            "sedang": [
+              15.6,
+              55.4
+            ],
+            "tidak_sehat": [
+              55.5,
+              150.4
+            ],
+            "sangat_tidak_sehat": [
+              150.5,
+              250.4
+            ],
+            "berbahaya": [
+              250.5,
+              null
+            ]
+          },
+          "status": "sourced_secondary",
+          "source": "Permen LHK P.14/2020 (https://peraturan.go.id/files/bn774-2020.pdf); rentang dikonfirmasi lewat Katadata yang mengutip BMKG",
+          "caveat": "Tabel lampiran berupa gambar. Cek visual sebelum status diubah ke sourced."
+        },
+        {
+          "parameter": "ispu_requires_sourced_emission_factor",
+          "value": true,
+          "status": "modeling_choice",
+          "source": "Keputusan desain: cegah kategori ISPU yang tampak presisi dari faktor emisi placeholder",
+          "caveat": null
+        },
+        {
+          "parameter": "frp_to_dry_matter_kg_per_mj",
+          "value": {
+            "low": 0.27,
+            "mode": 0.37,
+            "high": 0.45
+          },
+          "status": "sourced_range",
+          "source": "Wooster dkk. 2005 doi:10.1029/2005JD006318; Li dkk. 2018 (https://repository.library.noaa.gov/view/noaa/48652)",
+          "caveat": "Percobaan 0.368-0.453; satelit CONUS 0.266-0.374; antar-ekoregion 0.18-1.9. Belum divalidasi untuk gambut tropis."
+        },
+        {
+          "parameter": "mer_from_column_height",
+          "value": {
+            "formula": "M = c * H^p",
+            "c": 140.85,
+            "p": 4.15,
+            "unit_M": "kg/s",
+            "unit_H": "km",
+            "uncertainty_factor_50pct": 4,
+            "dre_density_kg_m3": 2500,
+            "h_reference": "above_vent"
+          },
+          "status": "sourced",
+          "source": "Mastin dkk. 2009 doi:10.1016/j.jvolgeores.2009.01.008",
+          "caveat": "H diukur di atas kawah (above vent level). c=140.85 kg/s dan p=4.15 diturunkan dari H=2.00*V^0.241 dengan kerapatan DRE 2500 kg/m^3. Ketidakpastian faktor ~4."
+        },
+        {
+          "parameter": "mer_lognormal_sigma_ln",
+          "value": 2.06,
+          "status": "modeling_choice",
+          "source": "ln 4 / 0.6745 dari faktor empat pada interval 50 persen",
+          "caveat": null
+        },
+        {
+          "parameter": "peak_phase_duration_h",
+          "value": 6.0,
+          "status": "assumption_placeholder",
+          "source": null,
+          "caveat": "Berapa lama puncak awan abu ~15 km bertahan. Belum ada sumber pasti untuk Anak Krakatau 2026-09. Wajib berlabel asumsi."
+        },
+        {
+          "parameter": "tier_thresholds",
+          "value": {
+            "min": 0.9,
+            "mid": 0.5,
+            "max": 0.05
+          },
+          "status": "assumption_placeholder",
+          "source": null,
+          "caveat": null
+        },
+        {
+          "parameter": "rain_scavenging",
+          "value": {
+            "a": 0.0001,
+            "b": 0.8
+          },
+          "status": "assumption_placeholder",
+          "source": null,
+          "caveat": null
+        },
+        {
+          "parameter": "emission_factor_pm25_g_per_kg",
+          "value": {
+            "forest": 15.0,
+            "peat": 25.0,
+            "agriculture": 10.0
+          },
+          "status": "assumption_placeholder",
+          "source": "Placeholder literatur emisi gambut/biomassa. Belum diverifikasi (D13b).",
+          "caveat": "Selama berstatus placeholder, kategori ISPU dinonaktifkan sesuai Prinsip 11 AGENTS.md."
+        },
+        {
+          "parameter": "fine_ash_fraction",
+          "value": {
+            "basaltic_min": 0.01,
+            "silicic_max": 0.5,
+            "krakatau_default": 0.05
+          },
+          "status": "sourced_secondary",
+          "source": "Mastin dkk. 2009 doi:10.1016/j.jvolgeores.2009.01.008",
+          "caveat": "Fraksi abu halus (< 63 um) untuk tipe erupsi basaltik/andesitik berkisar 0.01 - 0.50."
+        }
+      ],
+      "population_exposed": {
+        "min": 298372.9,
+        "median": 447646.6,
+        "max": 453265.4
+      },
+      "children_exposed": {
+        "min": 71609.5,
+        "median": 107435.2,
+        "max": 108783.7
+      },
+      "elderly_exposed": {
+        "min": 19394.2,
+        "median": 29097.0,
+        "max": 29462.3
+      },
+      "schools_exposed": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "healthcare_exposed": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.0
+      },
+      "airports_exposed": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 0.8
+      },
+      "area_exposed_km2": {
+        "min": 939.2,
+        "median": 1367.3,
+        "max": 1444.8
+      },
+      "ispu": {
+        "available": false,
+        "reason": "Kategori ISPU dinonaktifkan: faktor emisi PM2.5 (D13b) belum berstatus sourced* (Prinsip 11 AGENTS.md).",
+        "relative_risk_index": {
+          "min": 1.2,
+          "median": 2.5,
+          "max": 4.1
+        }
+      }
+    }
+  },
+  "deltas": {
+    "population_exposed_diff": {
+      "min_diff": -51.1,
+      "median_diff": -34151.5,
+      "max_diff": -45504.8
+    },
+    "area_exposed_diff_km2": {
+      "min_diff": -14.7,
+      "median_diff": -133.5,
+      "max_diff": -68.2
+    },
+    "schools_exposed_diff": {
+      "min_diff": 0.0,
+      "median_diff": 0.0,
+      "max_diff": 0.0
+    }
+  },
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD."
+}

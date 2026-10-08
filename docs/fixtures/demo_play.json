@@ -1,0 +1,64 @@
+{
+  "event_id": "anak_krakatau_2026_09",
+  "hazard": "volcano",
+  "playback_title": "Simulasi Riwayat Kejadian (Pratinjau Otomatis)",
+  "total_duration_hours": 48,
+  "step_interval_hours": 6,
+  "steps": [
+    {
+      "hour": 0,
+      "time_label": "T + 00:00 Jam",
+      "commentary": "T + 00 jam: Fase letusan awal dimulai dari kawah Anak Krakatau.",
+      "estimated_exposed_population_median": 0
+    },
+    {
+      "hour": 6,
+      "time_label": "T + 06:00 Jam",
+      "commentary": "T + 06 jam: Awan abu telah menyebar sejauh ~90 km terbawa angin troposfer atas ke arah Lampung & Selat Sunda.",
+      "estimated_exposed_population_median": 4020
+    },
+    {
+      "hour": 12,
+      "time_label": "T + 12:00 Jam",
+      "commentary": "T + 12 jam: Awan abu telah menyebar sejauh ~180 km terbawa angin troposfer atas ke arah Lampung & Selat Sunda.",
+      "estimated_exposed_population_median": 6540
+    },
+    {
+      "hour": 18,
+      "time_label": "T + 18:00 Jam",
+      "commentary": "T + 18 jam: Awan abu telah menyebar sejauh ~270 km terbawa angin troposfer atas ke arah Lampung & Selat Sunda.",
+      "estimated_exposed_population_median": 9060
+    },
+    {
+      "hour": 24,
+      "time_label": "T + 24:00 Jam",
+      "commentary": "T + 24 jam: Awan abu telah menyebar sejauh ~360 km terbawa angin troposfer atas ke arah Lampung & Selat Sunda.",
+      "estimated_exposed_population_median": 11580
+    },
+    {
+      "hour": 30,
+      "time_label": "T + 30:00 Jam",
+      "commentary": "T + 30 jam: Awan abu telah menyebar sejauh ~450 km terbawa angin troposfer atas ke arah Lampung & Selat Sunda.",
+      "estimated_exposed_population_median": 14100
+    },
+    {
+      "hour": 36,
+      "time_label": "T + 36:00 Jam",
+      "commentary": "T + 36 jam: Awan abu telah menyebar sejauh ~540 km terbawa angin troposfer atas ke arah Lampung & Selat Sunda.",
+      "estimated_exposed_population_median": 16620
+    },
+    {
+      "hour": 42,
+      "time_label": "T + 42:00 Jam",
+      "commentary": "T + 42 jam: Awan abu telah menyebar sejauh ~630 km terbawa angin troposfer atas ke arah Lampung & Selat Sunda.",
+      "estimated_exposed_population_median": 19140
+    },
+    {
+      "hour": 48,
+      "time_label": "T + 48:00 Jam",
+      "commentary": "T + 48 jam: Awan abu telah menyebar sejauh ~720 km terbawa angin troposfer atas ke arah Lampung & Selat Sunda.",
+      "estimated_exposed_population_median": 21660
+    }
+  ],
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti instruksi resmi dari PVMBG, BMKG, dan BPBD."
+}

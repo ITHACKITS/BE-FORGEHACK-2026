@@ -1,0 +1,35 @@
+{
+  "events": [
+    {
+      "event_id": "anak_krakatau_2026_09",
+      "hazard": "volcano",
+      "name": "Erupsi Gunung Anak Krakatau September 2026",
+      "start_utc": "2026-09-04T16:07:00Z",
+      "end_utc": "2026-09-05T17:04:00Z",
+      "members_source": "synthetic_from_mean_spread",
+      "n_members": 51,
+      "data_status": {
+        "weather": "synthetic_from_mean_spread",
+        "vona": "sourced_manual",
+        "reported_impact": "sourced_district_level",
+        "column_height": "null_from_vona",
+        "plume_top": "sourced_secondary_satellite"
+      }
+    },
+    {
+      "event_id": "live_kalimantan",
+      "hazard": "fire",
+      "name": "Kebakaran Hutan dan Lahan Kalimantan",
+      "start_utc": "2026-10-02T00:00:00Z",
+      "end_utc": "2026-10-05T12:00:00Z",
+      "members_source": "open_meteo_ensemble",
+      "n_members": 39,
+      "data_status": {
+        "firms": "live_or_offline_cache",
+        "weather": "open_meteo_ensemble",
+        "peat": "wetlands_international_2008",
+        "stations": "not_testable"
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "run_id": "run_e597ca1f4b21",
+  "hazard": "volcano",
+  "lahar_risk_level": "waspada",
+  "rainfall_threshold_trigger_mm_h": 20.0,
+  "critical_ash_thickness_mm": 5.0,
+  "vulnerable_drainage_basins": [
+    {
+      "river_name": "DAS Way Sekampung (Lampung)",
+      "risk": "sedang"
+    },
+    {
+      "river_name": "DAS Ci Asahan (Banten)",
+      "risk": "rendah"
+    }
+  ],
+  "warning_text": "PERINGATAN LAHAR HUJAN: Hujan dengan intensitas melampaui 20 mm/jam di sektor hulu berisiko memobilisasi endapan abu lepas menjadi aliran lahar sekunder di alur sungai.",
+  "source": "Pedoman Mitigasi Bahaya Sekunder PVMBG"
+}

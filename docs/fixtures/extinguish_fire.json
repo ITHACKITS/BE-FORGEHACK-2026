@@ -1,0 +1,29 @@
+{
+  "extinguished_clusters": [
+    1070
+  ],
+  "extinguished_frp_mw": 20628.9,
+  "reduction_percentage": 65.9,
+  "population_reduced": {
+    "min": 4320939.6,
+    "median": 5129581.6,
+    "max": 5793988.8
+  },
+  "children_protected": {
+    "min": 1037025.5,
+    "median": 1231099.6,
+    "max": 1390557.3
+  },
+  "schools_saved": {
+    "min": 0.0,
+    "median": 0.0,
+    "max": 0.0
+  },
+  "carbon_reduced_co2e_tonnes": {
+    "min": 2056729.5,
+    "median": 2818481.2,
+    "max": 3427882.5
+  },
+  "caveat": "Perhitungan cepat berbasis linearitas tag massa partikel tanpa simulasi ulang penuh.",
+  "disclaimer": "Simulasi ini adalah estimasi ilmiah untuk kesiapsiagaan dan pembelajaran, BUKAN peringatan resmi. Untuk keputusan nyata, ikuti PVMBG, BMKG, dan BPBD."
+}

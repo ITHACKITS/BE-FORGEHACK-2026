@@ -1,0 +1,52 @@
+{
+  "event_id": "anak_krakatau_2026_09",
+  "hazard": "volcano",
+  "resolution": "district",
+  "validation_note": "Validasi kasar pada tingkat kabupaten dan dampak penerbangan bandara.",
+  "members_source": "synthetic_from_mean_spread",
+  "reported_districts_evaluated": [
+    "Kabupaten Lampung Selatan",
+    "Kabupaten Tanggamus",
+    "Kabupaten Pandeglang"
+  ],
+  "district_hit_rate": 1.0,
+  "fractions_skill_score": 0.74,
+  "aviation_impact": {
+    "airport_name": "Bandara Radin Inten II (TKG)",
+    "label": "dampak penerbangan",
+    "reported_event": "Penerbangan dialihkan / ditutup sementara akibat sebaran abu di jalur udara",
+    "airspace_exposure_probability": 0.68,
+    "dispersion_altitude_fl": "FL100 - FL250",
+    "consistency": "konsisten dengan pengalihan penerbangan di koridor udara Selat Sunda - Lampung",
+    "caveat": "Dampak penerbangan adalah bahaya abu di udara (airspace), bukan akumulasi abu tebal di landasan."
+  },
+  "vertical_dispersion_directional_check": {
+    "upper_layer_status": "konsisten (angin level atas membawa fraksi abu halus ke arah barat daya)",
+    "mid_layer_status": "konsisten (angin level menengah menyebar ke arah barat - Lampung)",
+    "lower_layer_status": "konsisten (angin permukaan meniup partikel kasar ke arah timur/tenggara)",
+    "vona_reference": "VONA Anak Krakatau D05b 2026-09-04"
+  },
+  "grid_search_spread_inflation": [
+    {
+      "inflation_factor": 0.8,
+      "fss": 0.68,
+      "district_overlap_pct": 66.7
+    },
+    {
+      "inflation_factor": 1.0,
+      "fss": 0.74,
+      "district_overlap_pct": 100.0
+    },
+    {
+      "inflation_factor": 1.2,
+      "fss": 0.75,
+      "district_overlap_pct": 100.0
+    },
+    {
+      "inflation_factor": 1.5,
+      "fss": 0.71,
+      "district_overlap_pct": 100.0
+    }
+  ],
+  "confidence_caveat": "Anggota ensemble bersifat sintetis dari mean/spread, sehingga tidak boleh dijadikan klaim akurasi presisi. Parameter sengaja tidak disetel berlebih agar tidak terjadi overfitting."
+}

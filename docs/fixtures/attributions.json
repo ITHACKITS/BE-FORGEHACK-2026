@@ -1,0 +1,48 @@
+{
+  "project": "UdaraSiaga",
+  "description": "Simulator Sebaran Abu Vulkanik dan Asap Karhutla - JOINTS UGM 2026",
+  "attributions": [
+    {
+      "source": "WorldPop (School of Geography and Environmental Science, University of Southampton)",
+      "data": "Age and sex structures, 100m resolution (2020)",
+      "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+      "url": "https://hub.worldpop.org/geodata/summary?id=24798"
+    },
+    {
+      "source": "OpenStreetMap Contributors",
+      "data": "Fasilitas pendidikan, kesehatan, bandara, dan perairan",
+      "license": "Open Database License (ODbL) 1.0",
+      "url": "https://www.openstreetmap.org/copyright"
+    },
+    {
+      "source": "Open-Meteo",
+      "data": "Ensemble Weather API (DWD ICON, GFS, ECMWF IFS)",
+      "license": "Non-Commercial / Attribution Open Data",
+      "url": "https://open-meteo.com/en/docs/ensemble-api"
+    },
+    {
+      "source": "NASA FIRMS (EOSDIS)",
+      "data": "VIIRS & MODIS Near Real-Time Active Fire / Hotspot & FRP",
+      "license": "NASA Open Data Policy",
+      "url": "https://firms.modaps.eosdis.nasa.gov"
+    },
+    {
+      "source": "OpenAQ",
+      "data": "Air Quality Open Monitoring Platform",
+      "license": "Open Data Commons Open Database License (ODbL)",
+      "url": "https://openaq.org"
+    },
+    {
+      "source": "Kementerian Lingkungan Hidup dan Kehutanan (KLHK)",
+      "data": "Peraturan Menteri LHK No. P.14/2020 tentang Indeks Standar Pencemar Udara (ISPU)",
+      "license": "Dokumen Publik Negara Republik Indonesia",
+      "url": "https://peraturan.go.id/files/bn774-2020.pdf"
+    },
+    {
+      "source": "Badan Geologi / PVMBG Kementerian ESDM",
+      "data": "Laporan Erupsi dan Status Aktivitas Gunung Anak Krakatau",
+      "license": "Informasi Publik Badan Geologi",
+      "url": "https://geologi.esdm.go.id"
+    }
+  ]
+}
