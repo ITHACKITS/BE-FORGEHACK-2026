@@ -310,10 +310,15 @@ def get_evacuation_corridor_route(
     to_name: str = Query("RS Rujukan Aman", description="Nama RS tujuan"),
 ) -> Dict[str, Any]:
     """
-    Menghitung rute jalan raya riil (bukan garis lurus) menggunakan OSRM OpenStreetMap
-    antara sekolah terdampak dan rumah sakit rujukan aman terdekat.
+    Menghitung rute jalan raya riil minim dampak bahaya (Safe Evacuation Corridor)
+    menggunakan OSRM OpenStreetMap, menjauhi radius kawah aktif & zona paparan pekat.
     """
     from app.impact.routing import get_real_road_evacuation_route
+    data = _get_run_data(run_id)
+    center = data.get("center_coords") or {}
+    c_lat = center.get("latitude")
+    c_lon = center.get("longitude")
+
     return get_real_road_evacuation_route(
         origin_lat=from_lat,
         origin_lon=from_lon,
@@ -321,6 +326,8 @@ def get_evacuation_corridor_route(
         dest_lon=to_lon,
         origin_name=from_name,
         dest_name=to_name,
+        center_lat=c_lat,
+        center_lon=c_lon,
     )
 
 

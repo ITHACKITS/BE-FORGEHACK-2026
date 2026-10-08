@@ -49,6 +49,7 @@ def start_simulation(req: SimulationRequest):
     meta_file = event_dir / "meta.json"
 
     # 1. Muat metadata kejadian (Otomatis bangun metadata jika event berasal dari katalog nasional atau titik kustom)
+    event_meta = None
     if meta_file.exists():
         event_meta = json.loads(meta_file.read_text(encoding="utf-8-sig"))
     else:
@@ -392,38 +393,77 @@ def get_run_impact(run_id: str):
 
 @router.get("/runs/{run_id}/location/{facility_id}")
 def get_location_decision_card(run_id: str, facility_id: str):
-    if run_id not in RUNS_CACHE:
-        raise HTTPException(status_code=404, detail=f"Data array run '{run_id}' tidak aktif di memori.")
+    if run_id in RUNS_CACHE:
+        data = RUNS_CACHE[run_id]
+        grid_meta = data["grid"]
+        grid = SimulationGrid(
+            lat_min=grid_meta["lat_min"],
+            lat_max=grid_meta["lat_max"],
+            lon_min=grid_meta["lon_min"],
+            lon_max=grid_meta["lon_max"],
+            resolution_deg=grid_meta["resolution_deg"],
+        )
+        return evaluate_decision_card(data, facility_id, grid)
 
-    data = RUNS_CACHE[run_id]
-    grid_meta = data["grid"]
-    grid = SimulationGrid(
-        lat_min=grid_meta["lat_min"],
-        lat_max=grid_meta["lat_max"],
-        lon_min=grid_meta["lon_min"],
-        lon_max=grid_meta["lon_max"],
-        resolution_deg=grid_meta["resolution_deg"],
-    )
+    # Fallback jika data telah tersimpan di disk
+    data = _get_run_data(run_id)
+    fac_list = data.get("facilities_impacted", {})
+    if fac_list:
+        for pool in [
+            fac_list.get("schools", []),
+            fac_list.get("healthcare", []),
+            fac_list.get("airports", []),
+            fac_list.get("evacuation_referral_hospitals", []),
+        ]:
+            for item in pool:
+                if str(item.get("facility_id")) == str(facility_id) or str(item.get("id")) == str(facility_id):
+                    return {
+                        "available": True,
+                        "facility_id": facility_id,
+                        "name": item.get("name"),
+                        "facility_type": item.get("facility_type"),
+                        "exposure_probability": (item.get("exposure_pct") or 0) / 100.0,
+                        "exposure_probability_pct": item.get("exposure_pct") or 0,
+                        "earliest_arrival_h": item.get("arrival_time_earliest_h"),
+                        "alert_level": item.get("alert_level"),
+                        "action_recommendation": item.get("action_detail"),
+                        "nearest_safe_hospital": item.get("nearest_safe_hospital"),
+                    }
 
-    return evaluate_decision_card(data, facility_id, grid)
+    raise HTTPException(status_code=404, detail=f"Kartu keputusan fasilitas '{facility_id}' tidak ditemukan untuk run '{run_id}'.")
 
 
 @router.get("/runs/{run_id}/facilities-impacted")
 def get_run_facilities_impacted(run_id: str, min_prob: float = Query(0.05, ge=0.01, le=1.0)):
-    if run_id not in RUNS_CACHE:
-        raise HTTPException(status_code=404, detail=f"Data array run '{run_id}' tidak aktif di memori.")
+    if run_id in RUNS_CACHE:
+        data = RUNS_CACHE[run_id]
+        grid_meta = data["grid"]
+        grid = SimulationGrid(
+            lat_min=grid_meta["lat_min"],
+            lat_max=grid_meta["lat_max"],
+            lon_min=grid_meta["lon_min"],
+            lon_max=grid_meta["lon_max"],
+            resolution_deg=grid_meta["resolution_deg"],
+        )
+        return get_exposed_facilities_list(data, grid, min_prob=min_prob)
 
-    data = RUNS_CACHE[run_id]
-    grid_meta = data["grid"]
-    grid = SimulationGrid(
-        lat_min=grid_meta["lat_min"],
-        lat_max=grid_meta["lat_max"],
-        lon_min=grid_meta["lon_min"],
-        lon_max=grid_meta["lon_max"],
-        resolution_deg=grid_meta["resolution_deg"],
-    )
+    # Fallback ke hasil komputasi yang tersimpan di file
+    data = _get_run_data(run_id)
+    if "facilities_impacted" in data and data["facilities_impacted"]:
+        return data["facilities_impacted"]
 
-    return get_exposed_facilities_list(data, grid, min_prob=min_prob)
+    grid_meta = data.get("grid")
+    if grid_meta and "hourly_exposure_masks" in data:
+        grid = SimulationGrid(
+            lat_min=grid_meta["lat_min"],
+            lat_max=grid_meta["lat_max"],
+            lon_min=grid_meta["lon_min"],
+            lon_max=grid_meta["lon_max"],
+            resolution_deg=grid_meta["resolution_deg"],
+        )
+        return get_exposed_facilities_list(data, grid, min_prob=min_prob)
+
+    raise HTTPException(status_code=404, detail=f"Data fasilitas untuk run '{run_id}' tidak ditemukan.")
 
 
 @router.get("/runs/{run_id}/health-guidance")
