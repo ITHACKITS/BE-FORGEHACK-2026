@@ -1,6 +1,6 @@
-# Standbai: Backend API
+# StandbAI: Backend API
 
-**The engine and data behind Standbai**, a forecast-and-prepare platform for wildfire smoke and volcanic ash in Indonesia.
+**The engine and data behind StandbAI**, a forecast-and-prepare platform for wildfire smoke and volcanic ash in Indonesia.
 
 *ForgeHacks Online 2026 · AI + Climate track*
 
@@ -36,15 +36,20 @@ None of these say *whether smoke will reach a particular town, when, and what a 
 - Decision cards per facility; evacuation routes to safe hospitals (OSRM).
 - All impact numbers are `{min, median, max}`.
 
-**3. Answers residents city by city** (in progress):
+**3. Answers residents city by city** (planned, first priority; not built yet):
 - the air right now and a ±3-day PM2.5/PM10/dust series (CAMS forecasts);
 - a 3-day / 2-week / 1-month outlook with the reasons behind it;
 - a household preparedness kit.
 
-**4. Pushes warnings** (in progress): scheduled jobs and a **Telegram bot** through n8n.
+**4. Pushes warnings** (planned; not built yet): scheduled jobs and a **Telegram bot** through n8n.
 - `/subscribe <city>`, `/status <city>`;
 - a daily digest;
 - an instant alert when a city turns High.
+
+**Optional: answers questions** (planned). One `/chat` endpoint serves both the web chat panel and the Telegram bot.
+- The AI service's language model reads the question (Featherless, a ForgeHacks sponsor; Gemini as fallback).
+- The backend fetches the facts and builds links to the right page, e.g. "open the 72-hour simulation" or "see what to prepare".
+- The model never invents numbers or links.
 
 **5. Stays honest.**
 - Every assumption is listed with its source and status (`config/assumptions.yaml`).
@@ -54,24 +59,30 @@ None of these say *whether smoke will reach a particular town, when, and what a 
 ## Status
 
 The **Status** column is updated at submission time to what actually runs.
+- **Working:** running in the code and covered by tests or checked by hand.
+- **Planned:** designed in [`PRD.md`](PRD.md) with an owner, but not built yet. "Planned" doesn't mean it is under way.
 
 | Feature | Status |
 |---|---|
 | Simulation runs (volcano, fire), hourly probability tiers, impacts, decision cards | Working |
 | Analysis: hotspot ranking, "extinguish a hotspot", carbon, rain effect, compare, sensitivity, severity, arrival | Working |
 | Trust: validation, limits, sources, export, evacuation route, lahar warning | Working |
-| Spatial DB: 70 volcanoes, 36 forest areas, 992 facilities, 4,248 hotspots (SQLite + R*Tree) | Working |
-| Test suite | 40 tests passing (`pytest`, 2026-10-10) |
-| City endpoints (`/cities`, `/area/*`), preparedness, fires, volcanoes | In progress |
-| n8n jobs and Telegram bot | In progress |
-| Cloud Run deployment | In progress |
-| `/chat` orchestration, map frames, history + news | Planned |
+| Spatial DB: 70 volcanoes, 36 forest areas, 992 facilities, 4,248 hotspots (SQLite + R*Tree, `data/standbai.db`) | Working |
+| Configuration from `.env` and environment (`STANDBAI_OFFLINE`, CORS allow-list) | Working |
+| English API metadata and OpenAPI tags | Working |
+| Test suite | 47 tests passing (`pytest`, 2026-10-10) |
+| Product strings in code renamed to "StandbAI" | Planned (small follow-up) |
+| English text in engine, impact and scripts (about 500 lines still Indonesian) | Planned |
+| City endpoints (`/cities`, `/area/*`), preparedness, fires, volcanoes | Planned (first priority) |
+| Cloud Run deployment (no Dockerfile yet) | Planned (first priority) |
+| n8n jobs and Telegram bot | Planned |
+| `/chat` orchestration, map frames, history + news | Planned (stretch) |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  FE[Web app · Vercel] --> API[Standbai API · FastAPI · Cloud Run]
+  FE[Web app · Vercel] --> API[StandbAI API · FastAPI · Cloud Run]
   TG[Telegram] <--> N8N[n8n Cloud] <--> API
   API --> ENG[Dispersion engine · numpy]
   API --> DB[(SQLite + R*Tree)]
@@ -118,6 +129,16 @@ The main sources are NASA FIRMS, Open-Meteo (ensemble weather, CAMS air quality)
 - **Placeholder constants:** some constants are still `assumption_placeholder` (e.g. PM2.5 emission factors). Until they're sourced, engine-derived ISPU categories are switched off.
 - **No eruption timing:** the engine simulates where ash would go; it doesn't predict *when* a volcano erupts.
 - **Not an official warning.**
+
+## What's next
+
+These are designed in [`PRD.md`](PRD.md) but may not ship by the submission deadline:
+
+- **Ask StandbAI chat** on the web and Telegram (`/chat`), with links into simulations for questions such as "smoke in my area next month".
+- **Past events with news:** Mount Merapi 2010 and the 2019 Sumatra–Kalimantan haze, with fire-hotspot replays, headlines from that period (Google News RSS, Wikipedia) and "what people needed".
+- **PM2.5 map frames** from 7 days ago to 3 days ahead, and an event timeline.
+- **Machine-learning fire-activity outlook** from the AI service, replacing today's heuristic outlook once it beats its baseline.
+- **Scaling:** if data grows beyond one instance, move storage, streaming and batch processing to managed cloud services (Cloud Storage, Pub/Sub, BigQuery); see [`docs/DATASETS.md`](docs/DATASETS.md).
 
 ## Documentation
 
