@@ -1,8 +1,8 @@
 """
 app/main.py
 
-Aplikasi utama FastAPI untuk Backend UdaraSiaga.
-Menyediakan endpoint REST API, dokumentasi OpenAPI (/docs), dan frontend dummy (/dummy).
+FastAPI application for the Standbai backend API.
+Serves the REST endpoints, OpenAPI docs (/docs) and the dummy frontend (/dummy).
 """
 
 
@@ -18,7 +18,7 @@ from app.core.config import BACKEND_DIR, settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Inisialisasi otomatis skema database saat startup
+    # Create the database schema on startup and seed it on first run
     try:
         from app.db.repositories.volcano_repo import VolcanoRepository
         from app.db.schema import init_db_schema
@@ -45,16 +45,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS: localhost dan wildcard untuk mendukung pembukaan frontend dari file://
+# CORS allow-list from CORS_ORIGINS; unlisted origins get no CORS headers.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Registrasi Router
+# Routers
 app.include_router(health.router)
 app.include_router(events.router)
 app.include_router(simulate.router)
@@ -63,7 +63,7 @@ app.include_router(lapis3.router)
 app.include_router(layers.router)
 app.include_router(attributions.router)
 
-# Mount frontend dummy jika foldernya ada
+# Mount the dummy frontend if the folder exists
 frontend_dummy_dir = BACKEND_DIR / "frontend-dummy"
 if frontend_dummy_dir.exists():
     app.mount("/dummy", StaticFiles(directory=str(frontend_dummy_dir), html=True), name="dummy")

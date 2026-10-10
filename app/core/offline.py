@@ -1,28 +1,33 @@
 """
 app/core/offline.py
 
-Pelindung mode offline (Offline Guard).
-Jika UDARASIAGA_OFFLINE=1, memblokir pemanggilan jaringan eksternal dan
-memastikan aplikasi hanya mengakses file lokal di data/.
+Offline guard. When STANDBAI_OFFLINE=1, outbound network calls are blocked
+and only local files under data/ are used.
 """
 
 import os
 
+# Accepted as a fallback for one release (PRD §4.2); remove after the rename settles.
+_LEGACY_OFFLINE_VAR = "UDARASIAGA_OFFLINE"
+
 
 class OfflineGuardException(RuntimeError):
-    """Dilempar saat panggilan eksternal dicoba ketika mode offline aktif."""
+    """Raised when an outbound call is attempted while offline mode is on."""
     pass
 
 
 def is_offline() -> bool:
-    """Mengembalikan True jika mode offline aktif."""
-    return os.environ.get("UDARASIAGA_OFFLINE", "1") == "1"
+    """Return True when offline mode is on. Defaults to online (`0`)."""
+    value = os.environ.get("STANDBAI_OFFLINE")
+    if value is None:
+        value = os.environ.get(_LEGACY_OFFLINE_VAR, "0")
+    return value.strip() == "1"
 
 
-def assert_online_allowed(source_name: str = "eksternal"):
-    """Memastikan pemanggilan online diizinkan."""
+def assert_online_allowed(source_name: str = "external source"):
+    """Raise OfflineGuardException if outbound calls are not allowed."""
     if is_offline():
         raise OfflineGuardException(
-            f"Pemanggilan jaringan ke {source_name} diblokir: UDARASIAGA_OFFLINE=1 aktif. "
-            f"Gunakan data lokal dari data/events."
+            f"Network call to {source_name} blocked: STANDBAI_OFFLINE=1. "
+            f"Use local data from data/events."
         )
