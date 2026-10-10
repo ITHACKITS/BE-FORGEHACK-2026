@@ -1,0 +1,9 @@
+.git
+.venv
+**/__pycache__
+.pytest_cache
+.ruff_cache
+.env
+data/runs/*.json
+data/*.db-wal
+data/*.db-shm
