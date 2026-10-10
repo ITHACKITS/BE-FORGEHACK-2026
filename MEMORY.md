@@ -59,7 +59,7 @@ flowchart LR
 | `app/ingest/` | FIRMS, Open-Meteo, Overpass, population clients |
 | `app/db/` | SQLite connection (WAL), DDL with R*Tree indexes and triggers, repositories |
 | `config/` | `assumptions.yaml` (every constant with its status and source), `hazards.yaml` |
-| `data/` | `udarasiaga.db` (to be renamed `standbai.db`), `events/<id>/` presets, `layers/` GeoJSON, `runs/` outputs (git-ignored) |
+| `data/` | `standbai.db`, `events/<id>/` presets, `layers/` GeoJSON, `runs/` outputs (git-ignored) |
 | `scripts/` | Data generators, DB seeding, source verification, live API validation, GitHub project-board automation (not used by the app) |
 | `tests/` | `test_physics`, `test_integrity`, `test_database`, `test_lapis2`, `test_lapis3` |
 | `docs/` | `SPEC.md` (engine spec), `API_CONTRACT.md`, `SOURCES.md`, `DATASETS.md`, `DATABASE_ARCHITECTURE.md` (superseded by `ERD.md`), `fixtures/` |
@@ -69,12 +69,12 @@ flowchart LR
   - 31 routes covering simulation runs (volcano and fire), probability tiers per hour, impacts as ranges, facility decision cards, fire-cluster ranking, "extinguish a hotspot", carbon, rain effect, scenario compare, sensitivity, advice, severity, arrival, validation, limits, sources, export, emergency advisory, evacuation route, lahar warning, map layers.
   - DB: 70 volcanoes, 36 forest areas, 992 facilities (583 schools, 330 health, 79 airports), 4,248 FIRMS hotspots.
 - **Not ready** (tickets in `PRD.md`):
-  - offline by default and `.env` not loaded (BE-02);
   - no Dockerfile or deploy (BE-01);
   - Gemini called directly with shut-down model ids and the key in the URL (BE-04);
-  - Indonesian strings and the old product name in responses (BE-03a/b);
+  - Indonesian strings in engine and impact responses (BE-03b; the API layer and product name are done in BE-03a);
   - no city endpoints, preparedness, alerts or `/chat` yet (BE-05…BE-14).
-- **Tests:** 40 passed (`pytest -q`, offline, Python 3.14, 2026-10-10).
+- **Done on `feat/be-implementation` (2026-10-10):** BE-02 (`.env` loaded, `STANDBAI_OFFLINE` default `0` with legacy fallback, CORS allow-list from `CORS_ORIGINS`) and BE-03a (Standbai name, `data/standbai.db`, English tags `health, events, simulation, analysis, trust, layers, attributions`, `Standbai/1.0` User-Agent).
+- **Tests:** 47 passed (`pytest -q`, offline via `tests/conftest.py`, Python 3.13, 2026-10-10). `ruff check .` reports 139 errors that pre-date BE-02, mostly whitespace in `scripts/`.
 
 ## 7. Conventions
 - **Times:** UTC ISO 8601.

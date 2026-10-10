@@ -1,7 +1,7 @@
 # ERD: Standbai Backend Data Model
 
 **Engine:** SQLite with the built-in **R*Tree** module for spatial indexes.
-- **File:** `data/udarasiaga.db`, to be renamed `data/standbai.db` in ticket BE-03a.
+- **File:** `data/standbai.db` (renamed from `data/udarasiaga.db` in BE-03a).
 - **Schema source:** `app/db/schema.py`.
 - **Connection:** `app/db/session.py` (WAL journal, `synchronous=NORMAL`, 64 MB page cache, `foreign_keys=ON`).
 

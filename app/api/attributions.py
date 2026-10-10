@@ -1,10 +1,12 @@
 """
 app/api/attributions.py
 
-Router untuk atribusi sumber data dan lisensi resmi (Prinsip 9 AGENTS.md).
+Data source attributions and licences (AGENTS.md principle 9).
 """
 
 from fastapi import APIRouter
+
+from app.core.config import settings
 
 router = APIRouter(tags=["attributions"])
 
@@ -12,8 +14,11 @@ router = APIRouter(tags=["attributions"])
 @router.get("/attributions")
 def get_attributions():
     return {
-        "project": "UdaraSiaga",
-        "description": "Simulator Sebaran Abu Vulkanik dan Asap Karhutla - JOINTS UGM 2026",
+        "project": settings.PROJECT_NAME,
+        "description": (
+            "Data sources and licences behind Standbai's wildfire smoke and volcanic ash "
+            "forecasts and preparedness guidance for Indonesia."
+        ),
         "attributions": [
             {
                 "source": "WorldPop (School of Geography and Environmental Science, University of Southampton)",
@@ -23,7 +28,7 @@ def get_attributions():
             },
             {
                 "source": "OpenStreetMap Contributors",
-                "data": "Fasilitas pendidikan, kesehatan, bandara, dan perairan",
+                "data": "Schools, health facilities, airports and water bodies",
                 "license": "Open Database License (ODbL) 1.0",
                 "url": "https://www.openstreetmap.org/copyright"
             },
@@ -46,15 +51,15 @@ def get_attributions():
                 "url": "https://openaq.org"
             },
             {
-                "source": "Kementerian Lingkungan Hidup dan Kehutanan (KLHK)",
-                "data": "Peraturan Menteri LHK No. P.14/2020 tentang Indeks Standar Pencemar Udara (ISPU)",
-                "license": "Dokumen Publik Negara Republik Indonesia",
+                "source": "Kementerian Lingkungan Hidup dan Kehutanan (KLHK, Ministry of Environment and Forestry)",
+                "data": "Minister of Environment and Forestry Regulation No. P.14/2020 on the Air Pollutant Standard Index (ISPU)",
+                "license": "Public document of the Republic of Indonesia",
                 "url": "https://peraturan.go.id/files/bn774-2020.pdf"
             },
             {
-                "source": "Badan Geologi / PVMBG Kementerian ESDM",
-                "data": "Laporan Erupsi dan Status Aktivitas Gunung Anak Krakatau",
-                "license": "Informasi Publik Badan Geologi",
+                "source": "Badan Geologi / PVMBG (Ministry of Energy and Mineral Resources)",
+                "data": "Eruption reports and activity status of Anak Krakatau",
+                "license": "Badan Geologi public information",
                 "url": "https://geologi.esdm.go.id"
             }
         ]

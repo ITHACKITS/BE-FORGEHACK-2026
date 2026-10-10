@@ -1,7 +1,7 @@
 """
 app/api/lapis2.py
 
-Router untuk endpoint fitur pembeda Lapis 2:
+Analysis endpoints (layer 2):
 - /runs/{run_id}/ranking
 - /fire/extinguish
 - /runs/{run_id}/carbon
@@ -26,12 +26,12 @@ from app.impact.fire_features import calculate_carbon_emissions, rank_hotspot_cl
 from app.impact.volcano_features import calculate_land_water_impact
 from app.ingest.firms import FirmsIngest
 
-router = APIRouter(tags=["lapis2"])
+router = APIRouter(tags=["analysis"])
 
 
 class ExtinguishRequest(BaseModel):
     run_id: str
-    extinguish_cluster_ids: List[int] = Field(..., description="Daftar ID klaster titik api yang dipadamkan")
+    extinguish_cluster_ids: List[int] = Field(..., description="IDs of the hotspot clusters to extinguish")
 
 
 class CompareRequest(BaseModel):
@@ -41,7 +41,7 @@ class CompareRequest(BaseModel):
 
 class SensitivityRequest(BaseModel):
     run_id: str
-    parameter_name: str = Field("column_height_km", description="Nama parameter yang disapu (column_height_km atau rain_intensity_mm_h)")
+    parameter_name: str = Field("column_height_km", description="Parameter to sweep (column_height_km or rain_intensity_mm_h)")
 
 
 def _reconstruct_grid(data: Dict[str, Any]) -> SimulationGrid:
@@ -59,7 +59,7 @@ def _reconstruct_grid(data: Dict[str, Any]) -> SimulationGrid:
 def get_hotspot_ranking(run_id: str):
     data = _get_run_data(run_id)
     if data["hazard"] != "fire":
-        raise HTTPException(status_code=400, detail="Peringkat titik api hanya berlaku untuk bahaya kebakaran (fire).")
+        raise HTTPException(status_code=400, detail="Hotspot ranking applies only to the fire hazard.")
 
     grid = _reconstruct_grid(data)
     hotspots = FirmsIngest.load_event_hotspots(data["event_id"])
@@ -76,7 +76,7 @@ def get_hotspot_ranking(run_id: str):
 def post_extinguish_clusters(req: ExtinguishRequest):
     data = _get_run_data(req.run_id)
     if data["hazard"] != "fire":
-        raise HTTPException(status_code=400, detail="Fitur pemadaman hanya berlaku untuk kebakaran.")
+        raise HTTPException(status_code=400, detail="Extinguishing applies only to the fire hazard.")
 
     grid = _reconstruct_grid(data)
     hotspots = FirmsIngest.load_event_hotspots(data["event_id"])
@@ -89,7 +89,7 @@ def post_extinguish_clusters(req: ExtinguishRequest):
 def get_carbon_emissions(run_id: str):
     data = _get_run_data(run_id)
     if data["hazard"] != "fire":
-        raise HTTPException(status_code=400, detail="Estimasi gas karbon hanya relevan untuk kebakaran.")
+        raise HTTPException(status_code=400, detail="Carbon estimates apply only to the fire hazard.")
 
     hotspots = FirmsIngest.load_event_hotspots(data["event_id"])
     carbon = calculate_carbon_emissions(hotspots)
@@ -102,7 +102,7 @@ def get_carbon_emissions(run_id: str):
 def get_land_water_impact(run_id: str):
     data = _get_run_data(run_id)
     if data["hazard"] != "volcano":
-        raise HTTPException(status_code=400, detail="Dampak lahan dan air abu hanya untuk gunung berapi.")
+        raise HTTPException(status_code=400, detail="Ash impact on land and water applies only to the volcano hazard.")
 
     grid = _reconstruct_grid(data)
     return calculate_land_water_impact(data, grid)
@@ -141,7 +141,7 @@ def get_advice(run_id: str):
 @router.get("/runs/{run_id}/severity")
 def get_severity(run_id: str, t: int = Query(12, ge=0, le=48)):
     data = _get_run_data(run_id)
-    # Kembalikan ringkasan keparahan persentil (P5, P50, P95)
+    # Severity percentile summary (P5, P50, P95)
     return {
         "run_id": run_id,
         "hour": t,
@@ -149,7 +149,7 @@ def get_severity(run_id: str, t: int = Query(12, ge=0, le=48)):
         "percentile_5": 0.005,
         "percentile_50": 0.025,
         "percentile_95": 0.120,
-        "caveat": "Nilai persentil keparahan lintas anggota ensemble.",
+        "caveat": "Severity percentiles across ensemble members.",
         "disclaimer": data["disclaimer"]
     }
 
@@ -173,7 +173,7 @@ def get_arrival_times(run_id: str):
     return {
         "run_id": run_id,
         "arrival_time": cleaned_arrival,
-        "caveat": "Waktu kedatangan dihitung dalam jam sejak pelepasan partikel.",
+        "caveat": "Arrival time in hours since particle release.",
         "disclaimer": data["disclaimer"]
     }
 

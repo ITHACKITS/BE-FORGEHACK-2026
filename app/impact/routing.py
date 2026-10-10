@@ -15,6 +15,8 @@ import urllib.request
 import urllib.error
 from typing import Any, Dict, List, Tuple
 
+from app.core.config import settings
+
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Menghitung jarak bola bumi dalam kilometer."""
@@ -108,7 +110,7 @@ def get_real_road_evacuation_route(
     try:
         req = urllib.request.Request(
             osrm_url,
-            headers={"User-Agent": "UdaraSiaga-JOINTS2026-EmergencyRouter/1.0"}
+            headers={"User-Agent": settings.USER_AGENT}
         )
         with urllib.request.urlopen(req, timeout=3.5) as response:
             if response.status == 200:
@@ -165,7 +167,7 @@ def get_real_road_evacuation_route(
                             f"?overview=full&geometries=geojson&steps=false"
                         )
                         try:
-                            d_req = urllib.request.Request(detour_url, headers={"User-Agent": "UdaraSiaga-Router/1.0"})
+                            d_req = urllib.request.Request(detour_url, headers={"User-Agent": settings.USER_AGENT})
                             with urllib.request.urlopen(d_req, timeout=3.0) as d_resp:
                                 if d_resp.status == 200:
                                     d_data = json.loads(d_resp.read().decode("utf-8"))
@@ -236,7 +238,7 @@ def get_real_road_evacuation_route(
     duration_minutes = max(round((road_distance_km / 45.0) * 60.0), 1)
 
     return {
-        "routing_engine": "UdaraSiaga Local Road Curvature Synthesizer (Offline Fallback)",
+        "routing_engine": "Standbai local road curvature estimate (offline fallback)",
         "origin": {"name": origin_name, "latitude": origin_lat, "longitude": origin_lon},
         "destination": {"name": dest_name, "latitude": dest_lat, "longitude": dest_lon},
         "distance_km": road_distance_km,

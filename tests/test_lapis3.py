@@ -150,7 +150,7 @@ def test_run_export_json_and_html(sample_volcano_run):
     assert resp_html.status_code == 200
     html_text = resp_html.text
     assert "<!DOCTYPE html>" in html_text
-    assert "UdaraSiaga" in html_text
+    assert "Standbai" in html_text
     assert "@media print" in html_text
     assert sample_volcano_run in html_text
 
@@ -164,7 +164,7 @@ def test_lahar_warning(sample_volcano_run):
     assert resp.status_code == 200
     data = resp.json()
     assert data["hazard"] == "volcano"
-    assert data["lahar_risk_level"] in ["waspada", "siaga", "rendah"]
+    assert data["lahar_risk_level"] in ["low", "advisory", "watch", "warning"]
     assert "rainfall_threshold_trigger_mm_h" in data
     assert len(data.get("vulnerable_drainage_basins", [])) > 0
 

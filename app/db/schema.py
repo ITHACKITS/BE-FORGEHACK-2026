@@ -2,7 +2,7 @@
 app/db/schema.py
 
 Definisi skema DDL terpusat dan pemicu (triggers) indeks spasial R*Tree
-untuk sistem informasi geografis UdaraSiaga.
+untuk sistem informasi geografis Standbai.
 """
 
 import sqlite3

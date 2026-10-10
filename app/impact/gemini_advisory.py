@@ -17,6 +17,8 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict
 
+from app.core.offline import is_offline
+
 
 def get_gemini_api_key() -> str:
     """Mengambil kunci API Gemini dari environment atau file .env."""
@@ -86,8 +88,7 @@ Kembalikan HANYA format JSON valid tanpa tanda pembungkus markdown (```json):
 }}
 """
 
-    is_offline = os.getenv("UDARASIAGA_OFFLINE") == "1"
-    if api_key and not is_offline:
+    if api_key and not is_offline():
         models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
         for model in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
@@ -176,7 +177,7 @@ Kembalikan HANYA format JSON valid tanpa tanda pembungkus markdown (```json):
     )
 
     return {
-        "engine": "UdaraSiaga Deterministic Expert AI Synthesizer (Standard BNPB/Kemenkes)",
+        "engine": "Standbai deterministic advisory (BNPB/Kemenkes guidance)",
         "status": "expert_fallback",
         "press_release_title": default_pr_title,
         "press_release_body": default_pr_body,

@@ -6,7 +6,7 @@ Format: CSV saja, DAY_RANGE 1 sampai 5 hari per kueri.
 Menggabungkan VIIRS dan MODIS, menghapus duplikat, menyimpan CSV.
 Menghormati batas 5.000 transaksi per 10 menit.
 Kunci MAP_KEY HANYA dari .env atau environment, tidak pernah dicetak di log.
-Menghormati UDARASIAGA_OFFLINE=1.
+Menghormati STANDBAI_OFFLINE=1.
 """
 
 import argparse
@@ -20,7 +20,7 @@ import httpx
 SCRIPT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 EVENTS_DIR = BACKEND_DIR / "data" / "events"
-USER_AGENT = "UdaraSiaga-FIRMSDownloader/1.0 (JOINTS2026 UGM Hackathon)"
+USER_AGENT = "Standbai/1.0 (+https://github.com/ITHACKITS/BE-FORGEHACK-2026)"
 
 # Load .env
 ENV_FILE = BACKEND_DIR / ".env"
@@ -98,10 +98,10 @@ def download_hotspots(
         output_path = EVENTS_DIR / "live_kalimantan" / "hotspots.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    is_offline = os.environ.get("UDARASIAGA_OFFLINE") == "1"
+    is_offline = os.environ.get("STANDBAI_OFFLINE") == "1"
 
     if is_offline or not MAP_KEY:
-        reason = "UDARASIAGA_OFFLINE=1 aktif" if is_offline else "FIRMS_MAP_KEY tidak ditemukan di .env"
+        reason = "STANDBAI_OFFLINE=1 aktif" if is_offline else "FIRMS_MAP_KEY tidak ditemukan di .env"
         print(f"[FIRMS] {reason}. Menggunakan dataset offline / cache.")
         if output_path.exists() and output_path.stat().st_size > 0:
             print(f"[FIRMS] Mempertahankan data yang sudah ada di {output_path}")

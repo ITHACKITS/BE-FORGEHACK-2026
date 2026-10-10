@@ -13,36 +13,35 @@ cd BE-FORGEHACK-2026
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --env-file .env
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 - API: http://127.0.0.1:8000
 - Interactive docs: http://127.0.0.1:8000/docs
 - On first start, the app creates the SQLite schema and seeds the database if it's empty.
 
-> The code doesn't load `.env` by itself yet (ticket BE-02), so pass `--env-file .env` to uvicorn or export the variables.
+> The app loads `.env` from the repo root on startup. Variables already set in the environment take precedence.
 
 ## Environment variables
 
-**Read by the code on `main` today:**
+All variables are listed in `.env.example` and `PRD.md` §4.2. The most important:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `UDARASIAGA_OFFLINE` | `1` | `1` blocks all network calls and uses only `data/`. Set `0` to use live sources. Becomes `STANDBAI_OFFLINE` in BE-02. |
+| `STANDBAI_OFFLINE` | `0` | `1` blocks all network calls and uses only `data/`. `UDARASIAGA_OFFLINE` is still accepted as a fallback for one release. |
+| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated allow-list of web origins. Unlisted origins get no CORS headers. |
 | `FIRMS_MAP_KEY` | - | NASA FIRMS API key |
 | `OPENAQ_API_KEY` | - | OpenAQ (validation scripts) |
+| `AI_SERVICE_URL`, `AI_INTERNAL_TOKEN` | `http://localhost:8001`, - | AI service base URL and internal token |
+| `JOB_TOKEN` | - | Required in `X-Job-Token` on job and alert endpoints |
 | `GEMINI_API_KEY` | - | Used by the emergency advisory until BE-04 moves it to the AI service |
-
-**Added by the PRD tickets** (see `PRD.md` §4.2): `STANDBAI_OFFLINE`, `AI_SERVICE_URL`, `AI_INTERNAL_TOKEN`, `JOB_TOKEN`, `N8N_ALERT_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`, `CORS_ORIGINS`, `PUBLIC_APP_URL`.
-
-> `.env.example` on `main` still lists names that the code doesn't read (`APP_NAME`, `DATABASE_URL`, `AI_SERVICE_URL`). BE-02 aligns it.
 
 Never commit `.env`. If an API key was ever pasted into a chat or an issue, rotate it.
 
 ## Tests and lint
 
 ```bash
-UDARASIAGA_OFFLINE=1 python -m pytest -q   # 40 passed on 2026-10-10
+python -m pytest -q   # tests/conftest.py sets STANDBAI_OFFLINE=1
 ruff check .
 ```
 
@@ -50,7 +49,7 @@ ruff check .
 
 | Command | Purpose |
 |---|---|
-| `python -m scripts.db.seed_database` | Re-seed `data/udarasiaga.db` from `data/layers` and `data/events` |
+| `python -m scripts.db.seed_database` | Re-seed `data/standbai.db` from `data/layers` and `data/events` |
 | `python scripts/generators/download_firms.py` | Download FIRMS hotspots (needs `FIRMS_MAP_KEY`, offline off) |
 | `python scripts/generators/snapshot_ensemble.py` | Save the current Open-Meteo ensemble for an event |
 | `python scripts/verification/check_sources.py` | Check that the data sources respond; updates `docs/SOURCES.md` |
@@ -96,9 +95,9 @@ Run scripts from the repository root so that `app` is importable.
 
 | Symptom | Fix |
 |---|---|
-| Live data never loads | `UDARASIAGA_OFFLINE` defaults to `1`; set it to `0` |
-| Variables in `.env` are ignored | Use `--env-file .env` until BE-02 adds `load_dotenv()` |
-| CORS error from the web app | Add the web origin to `CORS_ORIGINS` (after BE-02; today CORS allows `*`) |
+| Live data never loads | Check that `STANDBAI_OFFLINE` is `0` (the default) |
+| Variables in `.env` are ignored | `.env` must be in the repo root; a variable already exported in the shell wins |
+| CORS error from the web app | Add the web origin to `CORS_ORIGINS` |
 | Simulations stall on Cloud Run | Deploy with `--no-cpu-throttling` |
 | Runs disappear after a redeploy | Expected: runs live on the instance disk; re-run or use the presets |
 | `pip install` fails on geo packages | Use Python 3.12 or 3.14 with a recent pip; `pip install --upgrade pip` first |

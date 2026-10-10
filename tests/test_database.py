@@ -1,7 +1,7 @@
 """
 tests/test_database.py
 
-Pengujian unit dan performa untuk basis data spasial terpadu UdaraSiaga
+Pengujian unit dan performa untuk basis data spasial terpadu Standbai
 (SQLite + R*Tree Spatial Engine + Repository Layer).
 """
 
@@ -21,7 +21,7 @@ client = TestClient(app)
 
 def test_database_tables_and_rtree_exist():
     """Memverifikasi bahwa database dan seluruh tabel virtual R*Tree terpasang sempurna."""
-    assert DB_PATH.exists(), "File database udarasiaga.db harus ada"
+    assert DB_PATH.exists(), "Database file standbai.db must exist"
     conn = get_db_connection()
     try:
         tables = [row["name"] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]

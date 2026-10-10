@@ -55,7 +55,7 @@ Profil keahlian tim (Fisika Atmosfer/ML, Backend/Spasial, UX/GIS), ringkasan pes
 2. **Appendix A2: Transparansi 24 Asumsi Ilmiah (D01–D24)**
    - Menunjukkan tabel katalog `config/assumptions.yaml` (Sourced, Secondary, Placeholder).
    - Penonaktifan etis kategori ISPU selama faktor emisi gambut belum primer.
-3. **Appendix A3: Resiliensi Offline Guard (`UDARASIAGA_OFFLINE=1`)**
+3. **Appendix A3: Resiliensi Offline Guard (`STANDBAI_OFFLINE=1`)**
    - Bukti sistem tetap beroperasi 100% tanpa jaringan internet di workstation posko darurat.
 4. **Appendix A4: Tata Kelola AI Tanpa Halusinasi (Strict Grounded Generation)**
    - Parameter fakta disuntikkan secara deterministik; suhu 0.2, larangan emoji total, dan fallback expert synthesizer lokal.
