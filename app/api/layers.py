@@ -21,7 +21,7 @@ def get_layer(
     event_id: Optional[str] = Query("live_kalimantan", description="Event ID for hotspot data"),
     limit: Optional[int] = Query(None, description="Maximum number of features"),
     zoom: Optional[int] = Query(None, description="Map zoom level for level of detail"),
-    facility_type: Optional[str] = Query(None, description="Facility type filter (school, healthcare, airport)")
+    facility_type: Optional[str] = Query(None, description="Facility type filter (airport)")
 ):
     if bbox:
         parts = [float(p.strip()) for p in bbox.split(",")]
@@ -249,6 +249,9 @@ def get_layer(
                     },
                     "wildfire_hotspots": {
                         "active_24h_firms": n_hotspots,
+                        # Additive: the count above is all stored detections, not the last 24 h
+                        "latest_detection_date": max((str(h.get("acq_date") or "") for h in hotspots), default="") or None,
+                        "count_note": "All stored detections up to latest_detection_date, not a live 24-hour count.",
                         "high_confidence_pct": high_pct,
                         "peat_clusters": 8
                     },
@@ -296,6 +299,8 @@ def get_layer(
             },
             "wildfire_hotspots": {
                 "active_24h_firms": n_hotspots,
+                "latest_detection_date": max((str(h.get("acq_date") or "") for h in hotspots), default="") or None,
+                "count_note": "All stored detections up to latest_detection_date, not a live 24-hour count.",
                 "high_confidence_pct": high_pct,
                 "peat_clusters": 8
             },

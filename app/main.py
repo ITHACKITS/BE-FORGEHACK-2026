@@ -10,9 +10,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import attributions, events, health, lapis2, lapis3, layers, simulate
+from app.api import attributions, events, health, lapis2, lapis3, layers, map_modes, simulate
 from app.core.config import BACKEND_DIR, settings
 
 
@@ -53,6 +54,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=2048)
 
 # Routers
 app.include_router(health.router)
@@ -60,6 +62,8 @@ app.include_router(events.router)
 app.include_router(simulate.router)
 app.include_router(lapis2.router)
 app.include_router(lapis3.router)
+# map_modes before layers: its fixed paths must win over /layers/{name}
+app.include_router(map_modes.router)
 app.include_router(layers.router)
 app.include_router(attributions.router)
 
