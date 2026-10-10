@@ -22,6 +22,37 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 > The app loads `.env` from the repo root on startup. Variables already set in the environment take precedence.
 
+## Run the full stack with Docker Compose (BE + AI + FE)
+
+`docker-compose.yml` lives in this repo and builds the other two from the folders next to it. Clone the three repos side by side, with their default folder names:
+
+```bash
+mkdir standbai && cd standbai
+git clone https://github.com/ITHACKITS/BE-FORGEHACK-2026.git
+git clone https://github.com/ITHACKITS/AI-FORGEHACK-2026.git
+git clone https://github.com/ITHACKITS/FE-FORGEHACK-2026.git
+cp BE-FORGEHACK-2026/.env.example BE-FORGEHACK-2026/.env   # optional; set STANDBAI_OFFLINE=1 for bundled data only
+cp AI-FORGEHACK-2026/.env.example AI-FORGEHACK-2026/.env   # optional
+
+cd BE-FORGEHACK-2026
+docker compose up -d --build      # first build takes a few minutes
+docker compose ps                 # be, ai, fe should be "Up"
+```
+
+| URL | What |
+|---|---|
+| http://localhost:5173/ | Landing page |
+| http://localhost:5173/simulator.html | Dashboard (calls the API on port 8000) |
+| http://localhost:8000/docs | Backend API docs |
+| http://localhost:8001/docs | AI service docs |
+
+- **Open the FE on `localhost`**, not `127.0.0.1`: the CORS allow-list is set for `http://localhost:5173`.
+- **Code changes need a rebuild:** images copy the code in (no bind mounts), so run `docker compose up -d --build be` (or `ai`, `fe`) after editing or pulling.
+- **Daily commands:** `docker compose logs -f be`, `docker compose down`. Run them from this folder.
+- **`.env` files are not baked into the images.** Compose reads them at start-up; a missing `.env` is fine.
+- **Tests in a container:** `docker compose run --rm --no-deps be python -m pytest -q`.
+- **Ports 8000, 8001 and 5173 must be free.** Stop any local `uvicorn` or `npm run dev` first.
+
 ## Environment variables
 
 All variables are listed in `.env.example` and `PRD.md` §4.2. The most important:

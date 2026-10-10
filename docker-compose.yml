@@ -1,0 +1,34 @@
+# Full StandbAI stack for local staging (backend + AI service + web app).
+# Clone the three repos side by side, then run `docker compose up -d --build` in this folder:
+#   <folder>/BE-FORGEHACK-2026   <folder>/AI-FORGEHACK-2026   <folder>/FE-FORGEHACK-2026
+name: standbai
+
+services:
+  be:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "8080"
+      CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+      AI_SERVICE_URL: "http://ai:8080"
+    ports:
+      - "8000:8080"
+
+  ai:
+    build: ../AI-FORGEHACK-2026
+    env_file:
+      - path: ../AI-FORGEHACK-2026/.env
+        required: false
+    environment:
+      PORT: "8080"
+    ports:
+      - "8001:8080"
+
+  fe:
+    build: ../FE-FORGEHACK-2026
+    ports:
+      - "5173:80"
+    depends_on:
+      - be
