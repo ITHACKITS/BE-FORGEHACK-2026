@@ -1,4 +1,4 @@
-# ERD: Standbai Backend Data Model
+# ERD: StandbAI Backend Data Model
 
 **Engine:** SQLite with the built-in **R*Tree** module for spatial indexes.
 - **File:** `data/standbai.db` (renamed from `data/udarasiaga.db` in BE-03a).
@@ -287,7 +287,7 @@ CREATE INDEX IF NOT EXISTS idx_alert_subscriptions_city ON alert_subscriptions(c
 
 | Change | How | Ticket |
 |---|---|---|
-| Rename the DB file to `data/standbai.db` | `git mv data/udarasiaga.db data/standbai.db`; update `DB_PATH` in `app/db/session.py` and the scripts | BE-03a |
+| Rename the DB file to `data/standbai.db` | `git mv data/udarasiaga.db data/standbai.db`; update `DB_PATH` in `app/db/session.py` and the scripts | BE-03a (**done** 2026-10-10) |
 | English hazard radius | Add `hazard_radius_km REAL` and copy from `radius_bahaya_km` (`ALTER TABLE volcanoes ADD COLUMN …; UPDATE volcanoes SET hazard_radius_km = radius_bahaya_km;`), or alias in `VolcanoRepository`. Keep the old column until the frontend switches. | BE-03b |
 | Add `alert_subscriptions` | Add the DDL above to `app/db/schema.py` (`CREATE TABLE IF NOT EXISTS`, so it's safe on existing files) | BE-11 |
 | English text in `forests.description` and other prose | Update the JSON sources in `data/layers/`, then re-seed or run `UPDATE` statements | BE-03b |

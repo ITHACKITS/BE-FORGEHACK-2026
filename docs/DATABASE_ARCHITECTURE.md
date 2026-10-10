@@ -1,14 +1,14 @@
-# Standbai Spatial Database Architecture
+# StandbAI Spatial Database Architecture
 
 > **Superseded by [`../ERD.md`](../ERD.md).** `ERD.md` is the maintained data model: current tables, verified row counts, and planned tables. This document keeps the design rationale and the query flow. Counts below were corrected to the values read from the database on 2026-10-10.
 
-This document covers the technical specification, relational schema, R*Tree spatial indexes and data-access (repository) pattern for the Standbai geographic information system and atmospheric dispersion simulator.
+This document covers the technical specification, relational schema, R*Tree spatial indexes and data-access (repository) pattern for the StandbAI geographic information system and atmospheric dispersion simulator.
 
 ---
 
 ## 1. Summary and design rationale
 
-Standbai integrates multi-hazard data at national scale across Indonesia's 38 provinces. To serve the interactive map without lag, the data layer moved from flat JSON files to a spatially indexed relational database.
+StandbAI integrates multi-hazard data at national scale across Indonesia's 38 provinces. To serve the interactive map without lag, the data layer moved from flat JSON files to a spatially indexed relational database.
 
 | Criterion | Flat JSON files (legacy) | SQLite + R*Tree (chosen) | PostgreSQL + PostGIS (external server) |
 | :--- | :--- | :--- | :--- |

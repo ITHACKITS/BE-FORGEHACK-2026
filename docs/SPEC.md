@@ -1,4 +1,4 @@
-# Standbai: Backend Specification v3 (engine and data)
+# StandbAI: Backend Specification v3 (engine and data)
 
 Last checked **5 October 2026**. Working rules and principles are in `AGENTS.md`; this file holds the technical content. Today's product tasks (city endpoints, Telegram, chat) are in `../PRD.md`.
 
@@ -115,7 +115,7 @@ Write to `.claude/skills/<name>/SKILL.md` and copy to `.cursor/rules/<name>.mdc`
 ```markdown
 ---
 name: standbai-data-integrity
-description: Use when writing or changing endpoints, response schemas, assumption configuration, or user-facing text in Standbai.
+description: Use when writing or changing endpoints, response schemas, assumption configuration, or user-facing text in StandbAI.
 ---
 Rules:
 1. Impact numbers are always ranges {min, median, max}. No single numbers.

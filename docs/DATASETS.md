@@ -1,6 +1,6 @@
-# Datasets: Standbai
+# Datasets: StandbAI
 
-The data Standbai uses or plans to use, with what each dataset is for, how it's accessed, its licence and the attribution to show.
+The data StandbAI uses or plans to use, with what each dataset is for, how it's accessed, its licence and the attribution to show.
 
 - **Status:** **in use** (wired in code on `main`), **P0** (needed today), **P1** (after the core is live), **P2** (roadmap).
 - **Verify before use:** licence and quota lines marked *verify* must be checked on the provider's page before relying on them. Record the result in [`SOURCES.md`](SOURCES.md).
@@ -63,7 +63,7 @@ The data Standbai uses or plans to use, with what each dataset is for, how it's 
   - The city air-quality cache is 29 series.
   - Map frames are about 2 MB.
 - **Where it fits:** SQLite with R*Tree (serving) and pandas/DuckDB (training) handle this on one machine.
-- **When to scale:** if Standbai grows to many countries or live streams, the cloud equivalents are:
+- **When to scale:** if StandbAI grows to many countries or live streams, the cloud equivalents are:
   - **Google Cloud Storage** (S3-compatible object store, the MinIO role);
   - **Pub/Sub** (the Kafka role);
   - **BigQuery** or **Dataproc** (the Spark role).

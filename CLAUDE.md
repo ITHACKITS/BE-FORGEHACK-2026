@@ -1,4 +1,4 @@
-# Claude Code: Standbai Backend API
+# Claude Code: StandbAI Backend API
 
 @MEMORY.md
 @AGENTS.md
