@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import attributions, events, health, lapis2, lapis3, layers, map_modes, simulate
+from app.api import advice, attributions, events, health, lapis2, lapis3, layers, map_modes, simulate
 from app.core.config import BACKEND_DIR, settings
 
 
@@ -63,6 +63,7 @@ app.include_router(simulate.router)
 app.include_router(lapis2.router)
 app.include_router(lapis3.router)
 # map_modes before layers: its fixed paths must win over /layers/{name}
+app.include_router(advice.router)
 app.include_router(map_modes.router)
 app.include_router(layers.router)
 app.include_router(attributions.router)
