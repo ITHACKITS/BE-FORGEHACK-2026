@@ -1,7 +1,7 @@
 """
 app/impact/validation.py
 
-Modul validasi model Standbai sesuai SPEC.md Bagian 14:
+Modul validasi model UdaraSiaga sesuai SPEC.md Bagian 14:
 1. Gunung (anak_krakatau_2026_09):
    - Tumpuk hasil pada reported_impact.geojson (D07).
    - Hitung persentase kabupaten terdampak yang masuk rentang area minimum - maksimum.

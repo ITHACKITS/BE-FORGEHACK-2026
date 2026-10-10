@@ -1,7 +1,7 @@
 """
 tests/test_physics.py
 
-Pengujian prinsip fisika dan numerik sesuai skill standbai-simulation-testing:
+Pengujian prinsip fisika dan numerik sesuai skill udarasiaga-simulation-testing:
 1. Adveksi: Angin konstan u selama T menggeser partikel sejauh u*T.
 2. Kecepatan jatuh: Butir besar mendarat lebih cepat/dekat dibanding butir halus.
 3. Kekekalan massa: Tanpa hujan/settling massa konstan; dengan pencucian massa hilang = terendapkan.

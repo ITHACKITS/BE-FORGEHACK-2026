@@ -1,4 +1,4 @@
-# Konfigurasi Asumsi Ilmiah dan Parameter Pemodelan Standbai
+# Konfigurasi Asumsi Ilmiah dan Parameter Pemodelan UdaraSiaga
 # Status sah: sourced, sourced_range, sourced_secondary, modeling_choice, to_verify, assumption_placeholder
 
 ispu_pm25_24h_ugm3:

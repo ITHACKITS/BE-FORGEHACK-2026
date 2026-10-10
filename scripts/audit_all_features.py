@@ -2,7 +2,7 @@
 backend/scripts/audit_all_features.py
 
 Audit komprehensif seluruh fitur (37 endpoints, 3 lapis arsitektur, 2 multi-bahaya:
-Gunung Api dan Karhutla) pada platform Standbai.
+Gunung Api dan Karhutla) pada platform UdaraSiaga.
 """
 
 import sys
@@ -40,7 +40,7 @@ def log_check(category: str, name: str, passed: bool, detail: str = ""):
         print(f"  [FAIL] {name} - ERROR: {detail}")
 
 print("=" * 80)
-print("AUDIT SISTEM KOMPREHENSIF STANDBAI (END-TO-END VALIDASI SELURUH FITUR)")
+print("AUDIT SISTEM KOMPREHENSIF UDARASIAGA (END-TO-END VALIDASI SELURUH FITUR)")
 print("=" * 80)
 
 with TestClient(app) as client:

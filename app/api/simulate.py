@@ -1,8 +1,8 @@
 """
 app/api/simulate.py
 
-Simulation runs, status polling, three-tier polygons and impact cards.
-Follows AGENTS.md (overrides rejected in auto mode, determinism, scenario labels).
+Router untuk eksekusi simulasi, polling status, poligon tiga tingkat, dan kartu dampak.
+Mematuhi seluruh prinsip AGENTS.md (penolakan overrides pada mode auto, determinisme, label skenario).
 """
 
 from typing import Any, Dict
@@ -18,8 +18,6 @@ from app.impact.exposure import (
     evaluate_decision_card,
     get_exposed_facilities_list,
     get_health_and_mask_guidance,
-    strip_removed_facilities,
-    strip_removed_impact,
 )
 from app.ingest.firms import FirmsIngest
 from app.ingest.openmeteo import OpenMeteoIngest
@@ -27,7 +25,7 @@ from app.schemas.simulation import SimulationRequest
 
 router = APIRouter(tags=["simulation"])
 
-# In-memory store for active runs with full arrays (capped at 10 entries to bound memory)
+# In-memory store untuk run aktif yang membawa array lengkap (dibatasi 10 entri untuk mencegah kebocoran memori)
 RUNS_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
@@ -50,12 +48,12 @@ def start_simulation(req: SimulationRequest):
     event_dir = EVENTS_DIR / event_id
     meta_file = event_dir / "meta.json"
 
-    # 1. Load event metadata (built automatically for national catalogue events or custom points)
+    # 1. Muat metadata kejadian (Otomatis bangun metadata jika event berasal dari katalog nasional atau titik kustom)
     event_meta = None
     if meta_file.exists():
         event_meta = json.loads(meta_file.read_text(encoding="utf-8-sig"))
     else:
-        # Look for a matching folder in data/events (tolerant of underscore differences)
+        # Cek apakah ada direktori di data/events yang cocok (toleran terhadap perbedaan underscore)
         clean_eid = event_id.replace("_", "").lower()
         if EVENTS_DIR.exists():
             for d in EVENTS_DIR.iterdir():
@@ -72,7 +70,7 @@ def start_simulation(req: SimulationRequest):
                             pass
 
     if not event_meta:
-        # Is the event_id in the national volcano catalogue?
+        # Cek apakah event_id ada di database katalog gunung api nasional
         volc_feature = None
         try:
             from app.db.repositories.volcano_repo import VolcanoRepository
@@ -108,7 +106,7 @@ def start_simulation(req: SimulationRequest):
             event_meta = {
                 "event_id": event_id,
                 "hazard": "volcano",
-                "name": f"{p['name']} eruption ({p['province']})",
+                "name": f"Erupsi {p['name']} ({p['province']})",
                 "start_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 "duration_h": 24.0,
                 "alert_level_at_event": p.get("level_name", "Level III (Siaga)"),
@@ -118,7 +116,7 @@ def start_simulation(req: SimulationRequest):
                 "vent_elevation_m": float(p.get("elevation_m", 1500.0)),
                 "coordinates": {"latitude": float(c[1]), "longitude": float(c[0])},
                 "bbox": [float(c[0]) - 0.7, float(c[1]) - 0.7, float(c[0]) + 0.7, float(c[1]) + 0.7],
-                "source": "PVMBG, Badan Geologi (national catalogue of 70 volcanoes)",
+                "source": "PVMBG Badan Geologi ESDM RI (Katalog 70 Gunung Api Nasional)",
                 "members_source": "open_meteo_live_forecast_api",
                 "n_members": req.n_members,
                 "data_status": {
@@ -144,7 +142,7 @@ def start_simulation(req: SimulationRequest):
                 "duration_h": 24.0,
                 "coordinates": {"latitude": k_lat, "longitude": k_lon},
                 "bbox": [k_lon - 0.7, k_lat - 0.7, k_lon + 0.7, k_lat + 0.7],
-                "source": "NASA FIRMS NRT (national fire zones)",
+                "source": "NASA FIRMS NRT (Zona Karhutla Nasional)",
                 "members_source": "open_meteo_live_forecast_api",
                 "n_members": req.n_members,
                 "data_status": {
@@ -156,10 +154,10 @@ def start_simulation(req: SimulationRequest):
             meta_file.write_text(json.dumps(event_meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
         elif req.source.latitude is not None and req.source.longitude is not None:
-            # Free-point simulation: any point clicked on the map of Indonesia
+            # Mode Simulasi Titik Bebas / Klik Sembarang Peta Indonesia
             c_lat = float(req.source.latitude)
             c_lon = float(req.source.longitude)
-            c_name = req.source.name or f"Custom point ({c_lat:.3f}, {c_lon:.3f})"
+            c_name = req.source.name or f"Titik Kustom ({c_lat:.3f}, {c_lon:.3f})"
             event_meta = {
                 "event_id": event_id,
                 "hazard": req.hazard,
@@ -170,7 +168,7 @@ def start_simulation(req: SimulationRequest):
                 "vent_elevation_m": 800.0 if req.hazard == "volcano" else None,
                 "coordinates": {"latitude": c_lat, "longitude": c_lon},
                 "bbox": [c_lon - 0.7, c_lat - 0.7, c_lon + 0.7, c_lat + 0.7],
-                "source": "User-selected coordinates (interactive)",
+                "source": "Koordinat Kustom Pengguna (Interaktif)",
                 "members_source": "open_meteo_live_forecast_api",
                 "n_members": req.n_members
             }
@@ -178,7 +176,7 @@ def start_simulation(req: SimulationRequest):
             meta_file.write_text(json.dumps(event_meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
         else:
-            # Look in the catalogue of 36 national forest areas
+            # Cek database katalog 36 hutan nasional
             forest_obj = None
             try:
                 from app.db.repositories.forest_repo import ForestRepository
@@ -216,7 +214,7 @@ def start_simulation(req: SimulationRequest):
                     "duration_h": 24.0,
                     "coordinates": {"latitude": f_lat, "longitude": f_lon},
                     "bbox": [f_lon - 0.7, f_lat - 0.7, f_lon + 0.7, f_lat + 0.7],
-                    "source": "Catalogue of 36 national forest and conservation areas",
+                    "source": "Katalog 36 Kawasan Hutan & Konservasi Nasional",
                     "members_source": "open_meteo_live_forecast_api",
                     "n_members": req.n_members,
                     "data_status": {"weather": "open_meteo_live_or_ensemble", "firms": "live_nrt_cluster"}
@@ -224,9 +222,9 @@ def start_simulation(req: SimulationRequest):
                 event_dir.mkdir(parents=True, exist_ok=True)
                 meta_file.write_text(json.dumps(event_meta, indent=2, ensure_ascii=False), encoding="utf-8")
             else:
-                raise HTTPException(status_code=404, detail=f"Event '{event_id}' not found in data/events/ or the national catalogue.")
+                raise HTTPException(status_code=404, detail=f"Event '{event_id}' tidak ditemukan di data/events/ maupun katalog nasional.")
 
-    # 2. Load weather data
+    # 2. Muat data cuaca
     try:
         weather_data = OpenMeteoIngest.get_weather_for_simulation(
             event_id=event_id,
@@ -235,16 +233,16 @@ def start_simulation(req: SimulationRequest):
             overrides=req.overrides
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load weather data: {e}")
+        raise HTTPException(status_code=500, detail=f"Gagal memuat cuaca: {e}")
 
-    # 3. Load hotspots for the fire hazard
+    # 3. Muat titik api jika hazard kebakaran
     hotspots = []
     if req.hazard == "fire":
         hotspots = FirmsIngest.load_event_hotspots(event_id, overrides=req.overrides)
         total_frp = sum(float(h.get("frp", 0.0)) for h in hotspots)
 
-        # If there are few or no local hotspots, look for real FIRMS satellite hotspots
-        # inside the official area boundary (point-in-polygon query)
+        # Jika titik api lokal minim / kosong, periksa apakah terdapat titik api riil satelit FIRMS
+        # yang jatuh di dalam poligon batas kawasan resmi (Point-in-Polygon query)
         if len(hotspots) < 10 and not (req.overrides and "hotspots" in req.overrides):
             f_geom = None
             try:
@@ -278,8 +276,8 @@ def start_simulation(req: SimulationRequest):
                 except Exception:
                     pass
 
-        # In experiment mode or for a custom point with no significant hotspots (< 40 MW),
-        # add a scenario hotspot cluster so the user can watch smoke dispersion
+        # Jika mode 'experiment' (skenario uji coba) atau custom point dan belum ada titik api signifikan (< 40 MW),
+        # sediakan klaster titik api skenario agar pengguna dapat mengamati simulasi dispersi asap
         if (req.mode == "experiment" and total_frp < 40.0) or (not hotspots and req.mode == "experiment") or (not hotspots and req.source.latitude is not None):
             coords = event_meta.get("coordinates", {})
             c_lat = coords.get("latitude") or coords.get("center_lat", -2.5)
@@ -301,11 +299,11 @@ def start_simulation(req: SimulationRequest):
                     "is_active": True
                 })
 
-    # 4. Run the simulator
+    # 4. Jalankan simulator
     runner = SimulationRunner(req)
     run_output = runner.run(event_meta, weather_data, hotspots)
 
-    # Keep in memory with FIFO eviction (at most 10 runs)
+    # Simpan di memori dengan pembatasan LRU (maksimal 10 run)
     if len(RUNS_CACHE) >= 10:
         oldest_key = next(iter(RUNS_CACHE))
         del RUNS_CACHE[oldest_key]
@@ -330,19 +328,13 @@ def _get_run_data(run_id: str) -> Dict[str, Any]:
     if run_id in RUNS_CACHE:
         return RUNS_CACHE[run_id]
 
-    # Fall back to the saved file
+    # Coba muat dari file
     save_file = RUNS_DIR / f"{run_id}.json"
     if not save_file.exists():
-        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' tidak ditemukan.")
 
     import json
-    data = json.loads(save_file.read_text(encoding="utf-8-sig"))
-    # Runs saved before schools and healthcare were removed still carry them
-    if isinstance(data.get("impact"), dict):
-        data["impact"] = strip_removed_impact(data["impact"])
-    if isinstance(data.get("facilities_impacted"), dict):
-        data["facilities_impacted"] = strip_removed_facilities(data["facilities_impacted"])
-    return data
+    return json.loads(save_file.read_text(encoding="utf-8-sig"))
 
 
 @router.get("/runs/{run_id}")
@@ -366,13 +358,13 @@ def get_run_status(run_id: str):
 
 
 @router.get("/runs/{run_id}/tiers")
-def get_run_tiers(run_id: str, t: int = Query(0, ge=0, le=48, description="Hour step")):
+def get_run_tiers(run_id: str, t: int = Query(0, ge=0, le=48, description="Langkah jam")):
     data = _get_run_data(run_id)
     tiers = data.get("hourly_tiers", {})
-    # Keys loaded from JSON may be strings
+    # Key di JSON file mungkin berupa string
     step_key = str(t) if str(t) in tiers else t
     if step_key not in tiers:
-        # Return a valid empty FeatureCollection for hours out of range
+        # Kembalikan FeatureCollection kosong yang valid jika di luar jam
         return {
             "type": "FeatureCollection",
             "properties": {"hour": t, "thresholds": {"min": 0.9, "mid": 0.5, "max": 0.05}},
@@ -384,7 +376,7 @@ def get_run_tiers(run_id: str, t: int = Query(0, ge=0, le=48, description="Hour 
 @router.get("/runs/{run_id}/impact")
 def get_run_impact(run_id: str):
     if run_id not in RUNS_CACHE:
-        raise HTTPException(status_code=404, detail=f"Array data for run '{run_id}' is not in memory.")
+        raise HTTPException(status_code=404, detail=f"Data array run '{run_id}' tidak aktif di memori.")
 
     data = RUNS_CACHE[run_id]
     grid_meta = data["grid"]
@@ -413,11 +405,16 @@ def get_location_decision_card(run_id: str, facility_id: str):
         )
         return evaluate_decision_card(data, facility_id, grid)
 
-    # Fallback when the run is only on disk
+    # Fallback jika data telah tersimpan di disk
     data = _get_run_data(run_id)
     fac_list = data.get("facilities_impacted", {})
     if fac_list:
-        for pool in [fac_list.get("airports", [])]:
+        for pool in [
+            fac_list.get("schools", []),
+            fac_list.get("healthcare", []),
+            fac_list.get("airports", []),
+            fac_list.get("evacuation_referral_hospitals", []),
+        ]:
             for item in pool:
                 if str(item.get("facility_id")) == str(facility_id) or str(item.get("id")) == str(facility_id):
                     return {
@@ -430,9 +427,10 @@ def get_location_decision_card(run_id: str, facility_id: str):
                         "earliest_arrival_h": item.get("arrival_time_earliest_h"),
                         "alert_level": item.get("alert_level"),
                         "action_recommendation": item.get("action_detail"),
+                        "nearest_safe_hospital": item.get("nearest_safe_hospital"),
                     }
 
-    raise HTTPException(status_code=404, detail=f"Decision card for facility '{facility_id}' not found for run '{run_id}'.")
+    raise HTTPException(status_code=404, detail=f"Kartu keputusan fasilitas '{facility_id}' tidak ditemukan untuk run '{run_id}'.")
 
 
 @router.get("/runs/{run_id}/facilities-impacted")
@@ -449,7 +447,7 @@ def get_run_facilities_impacted(run_id: str, min_prob: float = Query(0.05, ge=0.
         )
         return get_exposed_facilities_list(data, grid, min_prob=min_prob)
 
-    # Fall back to results saved in the file
+    # Fallback ke hasil komputasi yang tersimpan di file
     data = _get_run_data(run_id)
     if "facilities_impacted" in data and data["facilities_impacted"]:
         return data["facilities_impacted"]
@@ -465,7 +463,7 @@ def get_run_facilities_impacted(run_id: str, min_prob: float = Query(0.05, ge=0.
         )
         return get_exposed_facilities_list(data, grid, min_prob=min_prob)
 
-    raise HTTPException(status_code=404, detail=f"Facility data for run '{run_id}' not found.")
+    raise HTTPException(status_code=404, detail=f"Data fasilitas untuk run '{run_id}' tidak ditemukan.")
 
 
 @router.get("/runs/{run_id}/health-guidance")

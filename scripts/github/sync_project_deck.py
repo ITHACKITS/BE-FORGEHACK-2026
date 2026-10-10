@@ -11,7 +11,7 @@ ke GitHub Project 1 (https://github.com/orgs/nyarikerja/projects/1).
   * Priority: P0 / P1
   * Sprint: Sprint 3
   * Due Date: 2026-10-14
-  * PIC: [Sesuai Pembagian_Pitch_Deck_Standbai_v2_ContohVisual.md]
+  * PIC: [Sesuai Pembagian_Pitch_Deck_UdaraSiaga_v2_ContohVisual.md]
   * Assignees: Dibiarkan kosong sesuai instruksi user
 """
 

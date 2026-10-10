@@ -1,8 +1,8 @@
 """
 scripts/github/populate_pitch_deck_project.py
 
-Menambahkan seluruh pembagian Pitch Deck Standbai v2 dari:
-docs/Pembagian_Pitch_Deck_Standbai_v2_ContohVisual.md
+Menambahkan seluruh pembagian Pitch Deck UdaraSiaga v2 dari:
+docs/Pembagian_Pitch_Deck_UdaraSiaga_v2_ContohVisual.md
 ke GitHub Project 'https://github.com/orgs/nyarikerja/projects/1'.
 Semua kolom diisi otomatis (Status, Area, Priority, Sprint, Due Date, PIC)
 KECUALI assignees (dibiarkan kosong sesuai instruksi user).
@@ -35,11 +35,11 @@ Satu platform intelejen atmosferik multi-bahaya untuk melindungi jutaan nafas an
 
 **Elemen Visual Utama:**  
 - Latar belakang: Gelap taktis (`#0b0f19`) dengan siluet kontur dispersi partikel halus dan kilatan sensor satelit.
-- Sisi Kiri: Logo resmi Standbai, lencana status hijau berkedip `SIAGA 24/7`, sub-judul *"Sistem Intelejen Sebaran Atmosfer Multi-Bahaya & Panduan Evakuasi Dini Berbasis Sains"*.
+- Sisi Kiri: Logo resmi UdaraSiaga, lencana status hijau berkedip `SIAGA 24/7`, sub-judul *"Sistem Intelejen Sebaran Atmosfer Multi-Bahaya & Panduan Evakuasi Dini Berbasis Sains"*.
 - Sisi Kanan: Ticker telemetri nasional: *"70 Gunung Api Terpantau | 36 Kawasan Hutan Konservasi | Resolusi Spasial 100m"*.
 
 **Naskah Presenter:**  
-> *"Selamat pagi Dewan Juri yang terhormat. Setiap kali gunung api erupsi atau kebakaran hutan gambut melanda, jutaan anak sekolah dan warga rentan menghirup udara beracun tanpa tahu kapan bahaya tiba di depan pintu mereka. Kami mempersembahkan **Standbai**: platform intelejen atmosferik terpadu yang mentransformasi miliaran data satelit mentah menjadi instruksi evakuasi taktis dan kebijakan sekolah otomatis demi menyelamatkan generasi masa depan Indonesia."*
+> *"Selamat pagi Dewan Juri yang terhormat. Setiap kali gunung api erupsi atau kebakaran hutan gambut melanda, jutaan anak sekolah dan warga rentan menghirup udara beracun tanpa tahu kapan bahaya tiba di depan pintu mereka. Kami mempersembahkan **UdaraSiaga**: platform intelejen atmosferik terpadu yang mentransformasi miliaran data satelit mentah menjadi instruksi evakuasi taktis dan kebijakan sekolah otomatis demi menyelamatkan generasi masa depan Indonesia."*
 """
     },
     {
@@ -82,14 +82,14 @@ Ketiadaan jembatan operasional antara data mentah sains (VONA, FIRMS, BMKG) deng
 """
     },
     {
-        "title": "Pitch Deck - Slide 4: The Solution (Platform Standbai Terpadu)",
+        "title": "Pitch Deck - Slide 4: The Solution (Platform UdaraSiaga Terpadu)",
         "pic": "Anggota 1 (Lead Presenter)",
         "priority": "P0",
         "time": "1:00",
         "framework": "Y Combinator Solution",
         "body": """### Alokasi: Slide 4 (1:00) | PIC: Anggota 1 (Lead Presenter)
 **Framework:** Y Combinator Solution  
-**Tujuan:** Memperkenalkan Standbai sebagai solusi komprehensif (*One Engine, Dual Hazard, Unified Action*).
+**Tujuan:** Memperkenalkan UdaraSiaga sebagai solusi komprehensif (*One Engine, Dual Hazard, Unified Action*).
 
 **Pesan Inti:**  
 Satu platform, satu mesin dispersi fisika Lagrangian RK2, mengintegrasikan 70 gunung api dan 36 kawasan hutan nasional menjadi aksi dini terpadu.
@@ -141,7 +141,7 @@ Arsitektur data berkinerja tinggi: Ingest satelit, database SQLite spasial R*Tre
   - *Storage & Indexing:* SQLite R*Tree Spatial Database (<1 ms query tanpa server eksternal boros daya).
   - *Simulation Core:* Lagrangian Particle Dispersion (adveksi RK2, difusi turbulen, wet scavenging).
   - *Routing & AI:* OSRM real road network & Google Gemini AI + BNPB deterministic fallback.
-  - *Offline Guard:* `STANDBAI_OFFLINE=1` menjamin posko beroperasi saat internet bencana putus.
+  - *Offline Guard:* `UDARASIAGA_OFFLINE=1` menjamin posko beroperasi saat internet bencana putus.
 """
     },
     {
@@ -152,7 +152,7 @@ Arsitektur data berkinerja tinggi: Ingest satelit, database SQLite spasial R*Tre
         "framework": "NASA TRL (TRL 6) + Validasi FSS",
         "body": """### Alokasi: Slide 7 (1:00) | PIC: Anggota 2 (Technical & Demo Master)
 **Framework:** NASA Technology Readiness Levels (TRL 6) + Validasi FSS  
-**Tujuan:** Membangun kredibilitas akademis dan membedakan Standbai dari aplikasi visualisasi fiktif.
+**Tujuan:** Membangun kredibilitas akademis dan membedakan UdaraSiaga dari aplikasi visualisasi fiktif.
 
 **Pesan Inti:**  
 Kejujuran sains: Rentang ketidakpastian P5–P50–P95, formula empiris Mastin et al. 2009, validasi spasial FSS Letusan Krakatau 2026, dan transparansi etika penonaktifan ISPU.
@@ -215,10 +215,10 @@ Rencana adopsi praktis bersama BPBD, Disdik, dan Dinkes. Biaya operasional renda
         "framework": "Kawasaki Competitive Matrix (2x2)",
         "body": """### Alokasi: Slide 10 (0:45) | PIC: Anggota 3 (Business & Q&A Defense Anchor)
 **Framework:** Kawasaki Competitive Matrix (2x2 Matrix)  
-**Tujuan:** Menegaskan posisi keunggulan Standbai dibanding platform pemantau yang sudah ada.
+**Tujuan:** Menegaskan posisi keunggulan UdaraSiaga dibanding platform pemantau yang sudah ada.
 
 **Pesan Inti:**  
-Standbai vs VONA Magma vs NASA FIRMS vs Aplikasi Cuaca Komersial. Kami bukan sekadar penampil titik, melainkan pengambil keputusan taktis.
+UdaraSiaga vs VONA Magma vs NASA FIRMS vs Aplikasi Cuaca Komersial. Kami bukan sekadar penampil titik, melainkan pengambil keputusan taktis.
 
 **Elemen Visual Utama:**  
 - **Kuadran 2x2:**
@@ -228,7 +228,7 @@ Standbai vs VONA Magma vs NASA FIRMS vs Aplikasi Cuaca Komersial. Kami bukan sek
   - Magma PVMBG: Kiri Atas (Hanya erupsi, format buletin penerbangan).
   - NASA FIRMS: Kiri Bawah (Hanya titik api pasif).
   - Aplikasi Cuaca Umum (Windy): Tengah Kiri (Angin makro umum).
-  - **Standbai: Kanan Atas (Juara Kuadran): Multi-bahaya, satu mesin fisika, langsung menjadi keputusan taktis sekolah & medis.**
+  - **UdaraSiaga: Kanan Atas (Juara Kuadran): Multi-bahaya, satu mesin fisika, langsung menjadi keputusan taktis sekolah & medis.**
 """
     },
     {
@@ -294,7 +294,7 @@ Profil keahlian tim (Fisika Atmosfer/ML, Backend/Spasial, UX/GIS), ringkasan pes
 2. **Appendix A2: Transparansi 24 Asumsi Ilmiah (D01–D24)**
    - Menunjukkan tabel katalog `config/assumptions.yaml` (Sourced, Secondary, Placeholder).
    - Penonaktifan etis kategori ISPU selama faktor emisi gambut belum primer.
-3. **Appendix A3: Resiliensi Offline Guard (`STANDBAI_OFFLINE=1`)**
+3. **Appendix A3: Resiliensi Offline Guard (`UDARASIAGA_OFFLINE=1`)**
    - Bukti sistem tetap beroperasi 100% tanpa jaringan internet di workstation posko darurat.
 4. **Appendix A4: Tata Kelola AI Tanpa Halusinasi (Strict Grounded Generation)**
    - Parameter fakta disuntikkan secara deterministik; suhu 0.2, larangan emoji total, dan fallback expert synthesizer lokal.

@@ -1,6 +1,6 @@
 """
 app/db/__init__.py
 
-Standbai database package (SQLite + R*Tree spatial index).
-Provides the connection, indexed schema and spatial repositories.
+Modul basis data terpusat UdaraSiaga (SQLite + R*Tree Spatial Engine).
+Menyediakan koneksi, skema terindeks, dan repository spasial.
 """

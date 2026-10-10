@@ -78,6 +78,8 @@ class ImpactResult(BaseModel):
     population_exposed: RangeMetric
     children_exposed: RangeMetric
     elderly_exposed: RangeMetric
+    schools_exposed: RangeMetric
+    healthcare_exposed: RangeMetric
     airports_exposed: RangeMetric
     area_exposed_km2: RangeMetric
     ispu: Dict[str, Any]

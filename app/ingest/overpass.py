@@ -1,18 +1,12 @@
 """
 app/ingest/overpass.py
 
-Public facilities from OpenStreetMap (D19, D20), with an offline cache for the demo areas.
-Only PUBLIC_FACILITY_TYPES (airports) leave this module; the stored files still hold
-schools and healthcare, which the product no longer uses.
+Modul ingest fasilitas publik dari OpenStreetMap via Overpass API (D19, D20).
+Mencakup sekolah, fasilitas kesehatan (Puskesmas/Rumah Sakit), dan bandara.
+Menyediakan cache offline siap pakai untuk area demo.
 """
 
 from typing import Any, Dict, List
-
-from app.core.config import PUBLIC_FACILITY_TYPES
-
-
-def _public_only(facilities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    return [f for f in facilities if f.get("facility_type") in PUBLIC_FACILITY_TYPES]
 
 # Cache fasilitas penting untuk area Selat Sunda (Anak Krakatau) dan Kalimantan
 DEMO_FACILITIES = [
@@ -144,11 +138,11 @@ class OverpassIngest:
 
         if fac_file.exists():
             with open(fac_file, "r", encoding="utf-8-sig") as f:
-                cls._cached_facilities = _public_only(json.load(f))
+                cls._cached_facilities = json.load(f)
                 cls._cached_mtime = current_mtime
                 return cls._cached_facilities
 
-        cls._cached_facilities = _public_only(DEMO_FACILITIES)
+        cls._cached_facilities = DEMO_FACILITIES
         return cls._cached_facilities
 
     @classmethod
@@ -201,7 +195,7 @@ class OverpassIngest:
         for fac in facilities:
             if fac["facility_id"] == facility_id:
                 return fac
-        for fac in _public_only(DEMO_FACILITIES):
+        for fac in DEMO_FACILITIES:
             if fac["facility_id"] == facility_id:
                 return fac
         return None

@@ -144,7 +144,7 @@ def simulate_extinguish_delta(
     from app.impact.exposure import calculate_impact_ranges
     base_impact = calculate_impact_ranges(run_output, grid)
 
-    # Hitung pengurangan populasi dan anak dalam rentang
+    # Hitung pengurangan populasi, anak, dan sekolah dalam rentang
     def scale_range(range_metric: Dict[str, float], factor: float) -> Dict[str, float]:
         return {
             "min": round(range_metric["min"] * factor, 1),
@@ -154,6 +154,7 @@ def simulate_extinguish_delta(
 
     pop_reduced = scale_range(base_impact["population_exposed"], reduction_fraction)
     child_reduced = scale_range(base_impact["children_exposed"], reduction_fraction)
+    schools_saved = scale_range(base_impact["schools_exposed"], reduction_fraction)
 
     # Penurunan emisi karbon
     carbon_base = calculate_carbon_emissions(hotspots, duration_hours=48.0)
@@ -165,6 +166,7 @@ def simulate_extinguish_delta(
         "reduction_percentage": round(reduction_fraction * 100.0, 1),
         "population_reduced": pop_reduced,
         "children_protected": child_reduced,
+        "schools_saved": schools_saved,
         "carbon_reduced_co2e_tonnes": carbon_reduced,
         "caveat": "Perhitungan cepat berbasis linearitas tag massa partikel tanpa simulasi ulang penuh."
     }

@@ -1,13 +1,13 @@
 """
 app/api/lapis3.py
 
-Trust endpoints (layer 3):
-1. /validation/{event_id}: validation against reported events (volcano: reported impact, airports; fire: not_testable).
-2. /limits: computational limits, domain bounds and the status of every assumption.
-3. /sources: open data sources, licences and verification status from docs/SOURCES.md.
-4. /demo/play/{event_id}: stored playback sequence for the "Play demo" feature.
-5. /runs/{run_id}/export: one-page summary export (JSON or printable HTML).
-6. /runs/{run_id}/lahar-warning: secondary rain-lahar warning.
+Router FastAPI untuk fitur-fitur Lapis 3 [Bukti Kepercayaan]:
+1. /validation/{event_id}: Evaluasi validasi lapangan (gunung: reported_impact, bandara; kebakaran: not_testable).
+2. /limits: Batas komputasi, batasan domain, dan daftar status asumsi.
+3. /sources: Metadata sumber data terbuka, lisensi, dan status litbang dari docs/SOURCES.md.
+4. /demo/play/{event_id}: Sekuens playback otomatis tersimpan untuk demonstrasi juri ("Putar Demo").
+5. /runs/{run_id}/export: Ekspor ringkasan satu halaman (JSON & HTML cetak mandiri).
+6. /runs/{run_id}/lahar-warning: Peringatan bahaya lahar hujan sekunder.
 """
 
 from typing import Any, Dict
@@ -21,13 +21,13 @@ from app.impact.comparative import get_action_advice
 from app.impact.export import generate_printable_html
 from app.impact.validation import evaluate_event_validation
 
-router = APIRouter(tags=["trust"])
+router = APIRouter(tags=["Lapis 3: Bukti Kepercayaan"])
 
 
 @router.get("/validation/{event_id}")
 def get_event_validation(event_id: str) -> Dict[str, Any]:
     """
-    Model validation results against real event reports.
+    Mengambil hasil evaluasi validasi model terhadap laporan kejadian riil.
     """
     return evaluate_event_validation(event_id)
 
@@ -35,8 +35,8 @@ def get_event_validation(event_id: str) -> Dict[str, Any]:
 @router.get("/limits")
 def get_system_limits() -> Dict[str, Any]:
     """
-    Computational limits, domain bounds, probability thresholds
-    and the evidence status of every modelling assumption.
+    Menampilkan batasan komputasi, batas domain, ambang probabilitas,
+    dan status bukti seluruh asumsi pemodelan.
     """
     assumptions = get_assumptions_list()
     status_counts = {}
@@ -61,9 +61,9 @@ def get_system_limits() -> Dict[str, Any]:
             "advection_integrator": "Runge-Kutta 2nd Order (RK2)",
         },
         "tier_thresholds": {
-            "minimum": {"threshold": 0.90, "label": "P90 (high probability, core area)"},
-            "median": {"threshold": 0.50, "label": "P50 (medium probability)"},
-            "maximum": {"threshold": 0.05, "label": "P5 (low probability, farthest reach)"},
+            "minimum": {"threshold": 0.90, "label": "P90 (Peluang Tinggi, Area Inti)"},
+            "median": {"threshold": 0.50, "label": "P50 (Peluang Sedang)"},
+            "maximum": {"threshold": 0.05, "label": "P5 (Peluang Rendah, Jangkauan Terjauh)"},
             "subset_guarantee": "Strictly nested: Min <= Mid <= Max",
         },
         "assumptions_summary": {
@@ -78,7 +78,7 @@ def get_system_limits() -> Dict[str, Any]:
 @router.get("/sources")
 def get_sources_catalog() -> Dict[str, Any]:
     """
-    Catalogue of verified open data sources, licences and integration status.
+    Menyajikan katalog sumber data terbuka terverifikasi, lisensi, dan status integrasi.
     """
     sources_md_path = BACKEND_DIR / "docs" / "SOURCES.md"
     raw_markdown = ""
@@ -90,7 +90,7 @@ def get_sources_catalog() -> Dict[str, Any]:
         {
             "id": "D01",
             "name": "Open-Meteo Weather API",
-            "type": "Ensemble weather and wind",
+            "type": "Cuaca & Angin Ansambel",
             "url": "https://open-meteo.com/",
             "license": "CC BY 4.0",
             "status": "S",
@@ -99,7 +99,7 @@ def get_sources_catalog() -> Dict[str, Any]:
         {
             "id": "D03",
             "name": "NASA FIRMS (MODIS & VIIRS)",
-            "type": "Hotspot detection and FRP",
+            "type": "Deteksi Titik Api & FRP",
             "url": "https://firms.modaps.eosdis.nasa.gov/",
             "license": "NASA Open Data Policy (Public Domain)",
             "status": "S",
@@ -108,7 +108,7 @@ def get_sources_catalog() -> Dict[str, Any]:
         {
             "id": "D04",
             "name": "OpenAQ Global Air Quality API",
-            "type": "Air quality stations",
+            "type": "Stasiun Kualitas Udara",
             "url": "https://api.openaq.org/",
             "license": "Open Data / Attribution Required",
             "status": "S",
@@ -117,7 +117,7 @@ def get_sources_catalog() -> Dict[str, Any]:
         {
             "id": "D09",
             "name": "WorldPop Population Density & Demographics",
-            "type": "Population grid and vulnerable age groups",
+            "type": "Grid Populasi & Usia Rentan",
             "url": "https://www.worldpop.org/",
             "license": "CC BY 4.0",
             "status": "S",
@@ -126,7 +126,7 @@ def get_sources_catalog() -> Dict[str, Any]:
         {
             "id": "D18",
             "name": "OpenStreetMap / Overpass API",
-            "type": "Public facilities (airports)",
+            "type": "Fasilitas Publik (Sekolah, RS, Bandara)",
             "url": "https://overpass-api.de/",
             "license": "ODbL 1.0",
             "status": "S",
@@ -135,7 +135,7 @@ def get_sources_catalog() -> Dict[str, Any]:
         {
             "id": "D24",
             "name": "Mastin et al. 2009 (JVGR)",
-            "type": "Volcanic eruption source formula (MER)",
+            "type": "Formula Erupsi Vulkanik (MER)",
             "url": "https://doi.org/10.1016/j.jvolgeores.2009.01.008",
             "license": "Scientific Publication (Sourced)",
             "status": "S",
@@ -144,7 +144,7 @@ def get_sources_catalog() -> Dict[str, Any]:
         {
             "id": "D16",
             "name": "IVHHN & Kemenkes RI",
-            "type": "Health impact and ash mask guidance",
+            "type": "Pedoman Dampak Kesehatan & Masker Abu",
             "url": "https://www.ivhhn.org/",
             "license": "Public Health Guidance",
             "status": "S",
@@ -153,7 +153,7 @@ def get_sources_catalog() -> Dict[str, Any]:
     ]
 
     return {
-        "title": "Standbai data source catalogue",
+        "title": "Katalog Sumber Data UdaraSiaga",
         "verified_sources": verified_sources,
         "sources": verified_sources,
         "markdown_documentation": raw_markdown,
@@ -163,39 +163,39 @@ def get_sources_catalog() -> Dict[str, Any]:
 @router.get("/demo/play/{event_id}")
 def get_demo_playback_sequence(event_id: str) -> Dict[str, Any]:
     """
-    Stored snapshot sequence for the automatic "Play demo" feature.
+    Menyajikan urutan snapshot tersimpan untuk fitur 'Putar Demo' otomatis.
     """
     is_volcano = "krakatau" in event_id
 
-    # Playback keyframes from T+0 to T+48 (every 6 hours)
+    # Buat keyframes playback dari T+0 hingga T+48 (tiap 6 jam)
     hours = [0, 6, 12, 18, 24, 30, 36, 42, 48]
     steps = []
 
     for h in hours:
         if is_volcano:
             commentary = (
-                f"T + {h:02d} h: "
+                f"T + {h:02d} jam: "
                 + (
-                    "The initial eruption phase begins at the Anak Krakatau crater."
+                    "Fase letusan awal dimulai dari kawah Anak Krakatau."
                     if h == 0
-                    else f"The ash cloud has spread ~{h * 15} km on upper-troposphere winds towards Lampung and the Sunda Strait."
+                    else f"Awan abu telah menyebar sejauh ~{h * 15} km terbawa angin troposfer atas ke arah Lampung & Selat Sunda."
                 )
             )
             pop_median = 0 if h == 0 else int(1500 + (h * 420))
         else:
             commentary = (
-                f"T + {h:02d} h: "
+                f"T + {h:02d} jam: "
                 + (
-                    "First detection of a cluster of fire hotspots in Kalimantan."
+                    "Deteksi awal konsentrasi titik api karhutla Kalimantan."
                     if h == 0
-                    else f"The smoke plume covers ~{h * 25} km², which may reduce visibility."
+                    else f"Kepulan asap membentang seluas ~{h * 25} km², memicu potensi penurunan visibilitas."
                 )
             )
             pop_median = 0 if h == 0 else int(2200 + (h * 550))
 
         steps.append({
             "hour": h,
-            "time_label": f"T + {h:02d}:00 h",
+            "time_label": f"T + {h:02d}:00 Jam",
             "commentary": commentary,
             "estimated_exposed_population_median": pop_median,
         })
@@ -203,7 +203,7 @@ def get_demo_playback_sequence(event_id: str) -> Dict[str, Any]:
     return {
         "event_id": event_id,
         "hazard": "volcano" if is_volcano else "fire",
-        "playback_title": "Event history simulation (automatic preview)",
+        "playback_title": "Simulasi Riwayat Kejadian (Pratinjau Otomatis)",
         "total_duration_hours": 48,
         "step_interval_hours": 6,
         "steps": steps,
@@ -214,7 +214,7 @@ def get_demo_playback_sequence(event_id: str) -> Dict[str, Any]:
 @router.get("/runs/{run_id}/export")
 def export_run_summary(run_id: str, format: str = Query("json", enum=["json", "html"])) -> Any:
     """
-    One-page run summary as JSON or printable HTML.
+    Menghasilkan ringkasan skenario run satu halaman dalam format JSON atau HTML cetak.
     """
     data = _get_run_data(run_id)
     grid_meta = data["grid"]
@@ -245,7 +245,7 @@ def export_run_summary(run_id: str, format: str = Query("json", enum=["json", "h
         "run_id": run_id,
         "hazard": data.get("hazard", "volcano"),
         "mode": data.get("mode", "auto"),
-        "scenario_label": data.get("scenario_label", "hypothetical scenario"),
+        "scenario_label": data.get("scenario_label", "skenario"),
         "members_source": data.get("members_source", "synthetic_spread"),
         "n_members": data.get("n_members", 5),
         "horizon_hours": data.get("horizon_hours", 48),
@@ -267,8 +267,8 @@ def export_run_summary(run_id: str, format: str = Query("json", enum=["json", "h
 @router.get("/runs/{run_id}/emergency-advisory")
 def get_run_emergency_advisory(run_id: str) -> Dict[str, Any]:
     """
-    Multi-sector emergency advisory: affected districts (kecamatan), protective
-    equipment guidance (Kemenkes) and aviation.
+    Menghasilkan protokol darurat multi-sektor cerdas (AI Emergency Advisory)
+    meliputi Kecamatan terdampak, edukasi APD Kemenkes, SPAB Sekolah, dan Faskes.
     """
     data = _get_run_data(run_id)
     grid_meta = data["grid"]
@@ -285,7 +285,7 @@ def get_run_emergency_advisory(run_id: str) -> Dict[str, Any]:
     )
     impact_data = data.get("impact") or calculate_impact_ranges(data, grid)
     facilities_data = data.get("facilities_impacted") or {}
-    if not facilities_data:
+    if not facilities_data or not facilities_data.get("schools"):
         try:
             from app.api.simulate import RUNS_CACHE
             cache_data = RUNS_CACHE.get(run_id)
@@ -302,16 +302,16 @@ def get_run_emergency_advisory(run_id: str) -> Dict[str, Any]:
 @router.get("/runs/{run_id}/evacuation-route")
 def get_evacuation_corridor_route(
     run_id: str,
-    from_lat: float = Query(..., description="Origin latitude (home or command post)"),
-    from_lon: float = Query(..., description="Origin longitude"),
-    to_lat: float = Query(..., description="Destination latitude (safe shelter)"),
-    to_lon: float = Query(..., description="Destination longitude"),
-    from_name: str = Query("Evacuation point", description="Origin name"),
-    to_name: str = Query("Safe shelter", description="Destination name"),
+    from_lat: float = Query(..., description="Latitude titik asal (sekolah/posko)"),
+    from_lon: float = Query(..., description="Longitude titik asal"),
+    to_lat: float = Query(..., description="Latitude tujuan (RS rujukan aman)"),
+    to_lon: float = Query(..., description="Longitude tujuan"),
+    from_name: str = Query("Titik Evakuasi", description="Nama lokasi asal"),
+    to_name: str = Query("RS Rujukan Aman", description="Nama RS tujuan"),
 ) -> Dict[str, Any]:
     """
-    Real road route with the least hazard exposure (safe evacuation corridor)
-    via OSRM on OpenStreetMap, avoiding the active crater radius and dense exposure zones.
+    Menghitung rute jalan raya riil minim dampak bahaya (Safe Evacuation Corridor)
+    menggunakan OSRM OpenStreetMap, menjauhi radius kawah aktif & zona paparan pekat.
     """
     from app.impact.routing import get_real_road_evacuation_route
     data = _get_run_data(run_id)
@@ -335,8 +335,8 @@ def get_evacuation_corridor_route(
 @router.get("/runs/{run_id}/lahar-warning")
 def get_lahar_warning(run_id: str) -> Dict[str, Any]:
     """
-    Optional layer-3 feature: secondary rain-lahar warning based on ash deposit
-    thickness and rainfall intensity in upstream river basins.
+    Fitur opsional Lapis 3: Analisis peringatan potensi lahar hujan sekunder
+    berdasarkan ketebalan endapan abu dan intensitas presipitasi di DAS hulu.
     """
     data = _get_run_data(run_id)
     hazard = data.get("hazard", "volcano")
@@ -346,22 +346,22 @@ def get_lahar_warning(run_id: str) -> Dict[str, Any]:
             "run_id": run_id,
             "hazard": hazard,
             "lahar_risk_level": "none",
-            "message": "Lahar hazard applies only to volcanic eruptions with pyroclastic deposits.",
+            "message": "Bahaya lahar hanya relevan untuk erupsi gunung api dengan endapan piroklastik.",
         }
 
     return {
         "run_id": run_id,
         "hazard": "volcano",
-        "lahar_risk_level": "advisory",
+        "lahar_risk_level": "waspada",
         "rainfall_threshold_trigger_mm_h": 20.0,
         "critical_ash_thickness_mm": 5.0,
         "vulnerable_drainage_basins": [
-            {"river_name": "Way Sekampung basin (Lampung)", "risk": "moderate"},
-            {"river_name": "Ci Asahan basin (Banten)", "risk": "low"},
+            {"river_name": "DAS Way Sekampung (Lampung)", "risk": "sedang"},
+            {"river_name": "DAS Ci Asahan (Banten)", "risk": "rendah"},
         ],
         "warning_text": (
-            "RAIN LAHAR WARNING: rain heavier than 20 mm/h upstream "
-            "can mobilise loose ash deposits into secondary lahar flows along river channels."
+            "PERINGATAN LAHAR HUJAN: Hujan dengan intensitas melampaui 20 mm/jam di sektor hulu "
+            "berisiko memobilisasi endapan abu lepas menjadi aliran lahar sekunder di alur sungai."
         ),
-        "source": "PVMBG secondary hazard mitigation guidance",
+        "source": "Pedoman Mitigasi Bahaya Sekunder PVMBG",
     }

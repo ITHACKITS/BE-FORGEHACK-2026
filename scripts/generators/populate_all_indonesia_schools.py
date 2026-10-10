@@ -3,7 +3,7 @@ scripts/generators/populate_all_indonesia_schools.py
 
 Menghasilkan basis data komprehensif ribuan sekolah dan fasilitas kesehatan
 di seluruh 38 Provinsi dan 514 Kabupaten/Kota se-Indonesia.
-Memasukkannya langsung ke database SQLite (standbai.db) dengan indeks spasial R*Tree.
+Memasukkannya langsung ke database SQLite (udarasiaga.db) dengan indeks spasial R*Tree.
 """
 
 import json
@@ -456,7 +456,7 @@ def main():
 
     n_inserted = FacilityRepository.upsert_batch(facilities)
     duration = time.time() - t0
-    print(f"✨ Berhasil menyegarkan {n_inserted} fasilitas ke standbai.db dalam {duration:.2f} detik!")
+    print(f"✨ Berhasil menyegarkan {n_inserted} fasilitas ke udarasiaga.db dalam {duration:.2f} detik!")
     print(f"📊 Total fasilitas di database sekarang: {FacilityRepository.count_all()} unit.")
 
 

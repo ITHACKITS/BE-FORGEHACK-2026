@@ -32,6 +32,3 @@ data/runs/*.json
 # OS
 .DS_Store
 Thumbs.db
-.devswarm-temp/
-
-.venv/

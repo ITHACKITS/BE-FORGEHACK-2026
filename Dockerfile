@@ -1,10 +1,24 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
+
 WORKDIR /app
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-# rasterio's wheel needs libexpat, which the slim image doesn't ship
-RUN apt-get update && apt-get install -y --no-install-recommends libexpat1 && rm -rf /var/lib/apt/lists/*
+
+# Install system dependencies for GIS & C libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgdal-dev \
+    g++ \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend code
 COPY . .
-EXPOSE 8080
-CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}
+
+# Run auto-seed database and start FastAPI server
+ENV PORT=8000
+EXPOSE 8000
+
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

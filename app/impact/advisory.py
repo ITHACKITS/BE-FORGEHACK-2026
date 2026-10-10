@@ -6,8 +6,9 @@ Mengintegrasikan standar otoritatif:
 1. PVMBG Badan Geologi ESDM (Kawasan Rawan Bencana & Karakteristik Abu Silika)
 2. BMKG & KLHK Permen LHK P.14/2020 (Baku Mutu ISPU & Partikulat PM2.5)
 3. Kemenkes RI (Pedoman Kesiapsiagaan Krisis Kesehatan & APD Respirator Partikulat)
-4. PERDAMI (Protokol Trauma Mata & Larangan Lensa Kontak)
-5. Kemenhub / ICAO Annex 3 (NOTAM / ASHTAM Ruang Udara Bandara)
+4. Kemendikbudristek & BNPB Permendikbud 33/2019 (Satuan Pendidikan Aman Bencana - SPAB & PJJ Daring)
+5. PERDAMI (Protokol Trauma Mata & Larangan Lensa Kontak)
+6. Kemenhub / ICAO Annex 3 (NOTAM / ASHTAM Ruang Udara Bandara)
 """
 
 import math
@@ -21,7 +22,7 @@ def generate_emergency_advisory(
 ) -> Dict[str, Any]:
     """
     Menghasilkan dokumen taktis peringatan darurat komprehensif untuk
-    BPBD, Dinas Kesehatan, dan Publik.
+    BPBD, Dinas Kesehatan, Satuan Pendidikan, dan Publik.
     """
     hazard = run_output.get("hazard", "volcano")
     scenario_label = run_output.get("scenario_label", "Kejadian Teramati")
@@ -32,15 +33,19 @@ def generate_emergency_advisory(
     child_exposed = impact_data.get("children_exposed", {"min": 0, "median": 0, "max": 0}) if impact_data else {"min": 0, "median": 0, "max": 0}
     elder_exposed = impact_data.get("elderly_exposed", {"min": 0, "median": 0, "max": 0}) if impact_data else {"min": 0, "median": 0, "max": 0}
 
+    # Ekstrak data fasilitas
+    schools = facilities_data.get("schools", []) if facilities_data else []
+    healthcare = facilities_data.get("healthcare", []) if facilities_data else []
     airports = facilities_data.get("airports", []) if facilities_data else []
+    safe_hospitals = facilities_data.get("evacuation_referral_hospitals", []) if facilities_data else []
 
-    # Alert level from the median exposed population
+    # Klasifikasi tingkat bahaya operasional
     median_pop = pop_exposed.get("median", 0)
-    if median_pop > 500000:
+    if median_pop > 500000 or len(schools) > 20:
         alert_level = "SIAGA TERTINGGI (DARURAT MERAH)"
         alert_code = "RED"
         badge_bg = "#dc2626"
-    elif median_pop > 50000:
+    elif median_pop > 50000 or len(schools) > 5:
         alert_level = "WASPADA TINGGI (SIAGA ORANYE)"
         alert_code = "ORANGE"
         badge_bg = "#ea580c"
@@ -127,6 +132,50 @@ def generate_emergency_advisory(
         }
     ]
 
+    # 3. Protokol Satuan Pendidikan (Sekolah & SPAB) - Sinkron P90, P50, P05
+    pjj_schools_count = sum(1 for s in schools if s.get("exposure_probability", 0) >= 0.90)
+    outdoor_schools_count = sum(1 for s in schools if 0.50 <= s.get("exposure_probability", 0) < 0.90)
+    
+    school_guidance = {
+        "summary": (
+            f"Dari analisis pemodelan spasial, terdapat {len(schools)} sekolah di jalur paparan. "
+            f"{pjj_schools_count} sekolah direkomendasikan dialihkan ke Pembelajaran Jarak Jauh (PJJ Daring Penuh) "
+            f"dan {outdoor_schools_count} sekolah wajib menghentikan seluruh aktivitas luar ruang."
+        ),
+        "protocols": [
+            {
+                "tier": "Zona Inti Bahaya / P90 (Peluang Paparan ≥ 90%)",
+                "mandate": "ALIHKAN KE PJJ DARING PENUH (BELAJAR DARI RUMAH)",
+                "action": "Hentikan KBM tatap muka langsung. Pulangkan siswa sebelum kepulan abu tiba atau instruksikan belajar dari rumah. Tutup ventilasi ruang kelas."
+            },
+            {
+                "tier": "Zona Waspada / P50 (Peluang Paparan 50% - 89%)",
+                "mandate": "HENTIKAN SELURUH AKTIVITAS LUAR RUANG (OUTDOOR)",
+                "action": "Larang olahraga, upacara bendera, dan istirahat di halaman. Wajibkan siswa dan guru mengenakan masker N95 di dalam gedung."
+            },
+            {
+                "tier": "Sekolah di Zona Aman Bebas Paparan",
+                "mandate": "SIAGAKAN SEBAGAI TITIK KUMPUL / SHELTER EVAKUASI SEMENTARA",
+                "action": "Koordinasikan aula dan ruang kelas dengan BPBD sebagai posko penampungan warga evakuasi ramah anak."
+            }
+        ]
+    }
+
+    # 4. Protokol Fasilitas Kesehatan & Jaringan Rujukan RS
+    safe_ref_count = len([h for h in safe_hospitals if h.get("is_safe", False)])
+    health_guidance = {
+        "summary": (
+            f"Tercatat {len(healthcare)} fasilitas kesehatan terdampak langsung. "
+            f"Telah diidentifikasi {safe_ref_count} Rumah Sakit Rujukan Bebas Paparan (Safe Zone) "
+            f"untuk menerima limpahan evakuasi pasien gawat darurat ISPA dan trauma."
+        ),
+        "emergency_actions": [
+            "Faskes di zona bahaya: Segera operasikan Ruang Oksigen Bersih (Clean Air Room) terisolasi.",
+            "Inventarisasi stok tabung oksigen medis, regulator, masker nebulizer, serta obat bronkodilator (Salbutamol).",
+            "Pasien asma bronkial, PPOK, dan lansia dengan keluhan sesak napas akut segera dirujuk melalui Koridor Evakuasi Aman ke RS Rujukan Aman terdekat."
+        ]
+    }
+
     # 5. Protokol Ruang Udara, Transportasi & Bandara
     aviation_guidance = {
         "summary": f"{len(airports)} bandara / lapangan terbang dalam jangkauan trajektori abu atmosferik.",
@@ -137,22 +186,41 @@ def generate_emergency_advisory(
         ]
     }
 
-    # 6. Priority districts: airports in the footprint, else public facilities near the source
-    districts_impacted = {a.get("district") for a in airports if a.get("district") and a.get("district") != "-"}
+    # 6. Daftar Ringkas Wilayah / Kecamatan Prioritas
+    districts_impacted = set()
+    for s in schools:
+        d = s.get("district")
+        if d and d != "-":
+            districts_impacted.add(d)
+    for h in healthcare:
+        d = h.get("district")
+        if d and d != "-":
+            districts_impacted.add(d)
+
+    # Pemulihan wilayah jika fasilitas kosong (misal muat dari disk tanpa masker array)
     if not districts_impacted:
         try:
             from app.db.repositories.facility_repo import FacilityRepository
             from app.impact.exposure import haversine_km
+            all_facs = FacilityRepository.get_all()
             center = run_output.get("center_coords") or {
                 "latitude": (run_output.get("grid", {}).get("lat_min", 0) + run_output.get("grid", {}).get("lat_max", 0)) / 2.0,
                 "longitude": (run_output.get("grid", {}).get("lon_min", 0) + run_output.get("grid", {}).get("lon_max", 0)) / 2.0,
             }
             c_lat = float(center.get("latitude") or 0.0)
             c_lon = float(center.get("longitude") or 0.0)
-            for f in FacilityRepository.get_all():
+            nearby = [
+                f for f in all_facs 
+                if haversine_km(c_lat, c_lon, f["latitude"], f["longitude"]) <= 95.0
+            ]
+            for f in nearby:
                 d = f.get("district")
-                if d and d != "-" and haversine_km(c_lat, c_lon, f["latitude"], f["longitude"]) <= 95.0:
+                if d and d != "-":
                     districts_impacted.add(d)
+            if not schools:
+                schools = [f for f in nearby if f.get("facility_type") == "school"]
+            if not healthcare:
+                healthcare = [f for f in nearby if f.get("facility_type") == "healthcare"]
         except Exception:
             pass
 
@@ -176,6 +244,15 @@ def generate_emergency_advisory(
         "priority_districts": sorted(list(districts_impacted))[:15],
     }
 
+    # Hitung jumlah sekolah & faskes yang akurat
+    effective_schools_count = len(schools)
+    if effective_schools_count == 0 and impact_data and impact_data.get("schools_exposed"):
+        effective_schools_count = int(round(float(impact_data["schools_exposed"].get("median", 0))))
+
+    effective_healthcare_count = len(healthcare)
+    if effective_healthcare_count == 0 and impact_data and impact_data.get("healthcare_exposed"):
+        effective_healthcare_count = int(round(float(impact_data["healthcare_exposed"].get("median", 0))))
+
     # Integrasi AI Gemini / Fallback Expert Engine
     gemini_briefing = {}
     try:
@@ -185,6 +262,8 @@ def generate_emergency_advisory(
             scenario_label=scenario_label,
             districts=sorted(list(districts_impacted)),
             population_summary=pop_summary,
+            school_count=effective_schools_count,
+            healthcare_count=effective_healthcare_count,
         )
     except Exception:
         pass
@@ -199,6 +278,10 @@ def generate_emergency_advisory(
         "population_summary": pop_summary,
         "ppe_guidance": ppe_guidance,
         "household_guidance": household_guidance,
+        "school_guidance": school_guidance,
+        "health_guidance": health_guidance,
         "aviation_guidance": aviation_guidance,
+        "schools_count": effective_schools_count,
+        "healthcare_count": effective_healthcare_count,
         "gemini_briefing": gemini_briefing,
     }

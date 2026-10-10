@@ -1,7 +1,7 @@
 """
 app/api/health.py
 
-Health status and operating mode.
+Router untuk status kesehatan sistem dan mode operasional.
 """
 
 from fastapi import APIRouter

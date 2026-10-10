@@ -1,9 +1,9 @@
 """
 scripts/db/seed_database.py
 
-Skrip migrasi dan seeding database terpadu Standbai (SQLite + R*Tree).
+Skrip migrasi dan seeding database terpadu UdaraSiaga (SQLite + R*Tree).
 Mengimpor seluruh katalog 70 Gunung Api PVMBG, 36 Kawasan Hutan & Lahan Gambut,
-310 Fasilitas Publik Strategis Nasional, dan Hotspot Satelit FIRMS ke dalam standbai.db.
+310 Fasilitas Publik Strategis Nasional, dan Hotspot Satelit FIRMS ke dalam udarasiaga.db.
 """
 
 import csv
@@ -31,7 +31,7 @@ from app.db.repositories.volcano_repo import VolcanoRepository
 
 
 def seed_all():
-    print(f"🚀 Memulai migrasi & seeding database Standbai: {DB_PATH}")
+    print(f"🚀 Memulai migrasi & seeding database UdaraSiaga: {DB_PATH}")
     start_time = time.time()
 
     # 1. Inisialisasi skema dan R*Tree triggers

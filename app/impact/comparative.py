@@ -104,7 +104,7 @@ def compare_two_runs(
         "deltas": {
             "population_exposed_diff": diff_metric(imp1["population_exposed"], imp2["population_exposed"]),
             "area_exposed_diff_km2": diff_metric(imp1["area_exposed_km2"], imp2["area_exposed_km2"]),
-            "airports_exposed_diff": diff_metric(imp1["airports_exposed"], imp2["airports_exposed"]),
+            "schools_exposed_diff": diff_metric(imp1["schools_exposed"], imp2["schools_exposed"]),
         },
         "disclaimer": run1["disclaimer"]
     }

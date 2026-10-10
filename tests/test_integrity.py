@@ -133,9 +133,9 @@ def test_impact_range_and_ispu_status():
 def test_offline_guard(monkeypatch):
     """
     Prinsip 6 AGENTS.md:
-    STANDBAI_OFFLINE=1 blocks outbound network calls.
+    UDARASIAGA_OFFLINE=1 memblokir panggilan jaringan eksternal.
     """
-    monkeypatch.setenv("STANDBAI_OFFLINE", "1")
+    monkeypatch.setenv("UDARASIAGA_OFFLINE", "1")
     with pytest.raises(OfflineGuardException):
         assert_online_allowed("NASA FIRMS")
 
