@@ -1,4 +1,4 @@
-# PRD: Standbai Backend API (`BE-FORGEHACK-2026`)
+# PRD: StandbAI Backend API (`BE-FORGEHACK-2026`)
 
 | | |
 |---|---|
@@ -32,7 +32,7 @@ But the web app and the residents it serves can't use it yet:
 
 Make the backend the **single public API** (a backend-for-frontend) for the web app, the Telegram bot and n8n:
 
-1. **New city-centred endpoints.** They answer the prototype's needs from real data: CAMS air-quality forecasts via Open-Meteo, NASA FIRMS hotspots, PVMBG volcano levels, Open-Meteo weather, the Standbai engine, and the AI service's outlook.
+1. **New city-centred endpoints.** They answer the prototype's needs from real data: CAMS air-quality forecasts via Open-Meteo, NASA FIRMS hotspots, PVMBG volcano levels, Open-Meteo weather, the StandbAI engine, and the AI service's outlook.
 2. **Deterministic preparedness maths.** The web app, the Telegram bot and the chat all quote the same numbers.
 3. **Job endpoints for n8n.** n8n refreshes FIRMS and air-quality caches on a schedule.
 4. **Telegram subscriptions and alerts.** n8n runs the bot and BE stores subscriptions and builds messages.
@@ -68,7 +68,7 @@ The existing simulation endpoints stay unchanged in shape, so the `/simulate` vi
 
 ```mermaid
 flowchart LR
-  U[Web app · Vercel] -->|HTTPS JSON| BE[Standbai API · FastAPI · Cloud Run]
+  U[Web app · Vercel] -->|HTTPS JSON| BE[StandbAI API · FastAPI · Cloud Run]
   TG[Telegram users] <--> N8N[n8n Cloud]
   N8N -->|X-Job-Token| BE
   BE -->|webhook X-Webhook-Secret| N8N
@@ -108,7 +108,7 @@ flowchart LR
 
 ### 4.2 Configuration
 
-The code currently reads only `UDARASIAGA_OFFLINE` (default `"1"`), `FIRMS_MAP_KEY`, `OPENAQ_API_KEY` and `GEMINI_API_KEY`, and never loads `.env`.
+**Status: done in BE-02** (2026-10-10, branch `feat/be-implementation`). Before that ticket, the code read only `UDARASIAGA_OFFLINE` (default `"1"`), `FIRMS_MAP_KEY`, `OPENAQ_API_KEY` and `GEMINI_API_KEY`, and never loaded `.env`.
 
 **Changes:**
 - Call `load_dotenv()` at the top of `app/core/config.py` and add `python-dotenv` to `requirements.txt`.
@@ -232,7 +232,7 @@ The JSON examples for the endpoints the web app uses are in the FE PRD §5 (`FE-
 **Horizon rule:**
 - ≤72 h: dashboard/map/simulate links.
 - 3–30 days: outlook (`dry_2w`, `fire_1m`) plus a "prepare now" kit.
-- More than 30 days: explain that Standbai doesn't forecast that far.
+- More than 30 days: explain that StandbAI doesn't forecast that far.
 
 ### 4.8 History + news (P1, after P0 is live)
 
@@ -263,7 +263,7 @@ The JSON examples for the endpoints the web app uses are in the FE PRD §5 (`FE-
 sequenceDiagram
   participant U as Resident (Telegram)
   participant N as n8n
-  participant B as Standbai API
+  participant B as StandbAI API
   U->>N: /subscribe Pekanbaru
   N->>B: POST /alerts/subscriptions {chat_id, city} (X-Job-Token)
   B-->>N: {ok, text: today's outlook}
@@ -291,7 +291,7 @@ sequenceDiagram
 
 **Bot copy** (English; the disclaimer is always included):
 
-> Standbai Bot sends smoke and ash outlooks for Indonesian cities.
+> StandbAI Bot sends smoke and ash outlooks for Indonesian cities.
 > Commands: /subscribe <city> · /status <city> · /unsubscribe
 > Not an official warning. Follow BMKG, PVMBG and your local BPBD.
 
@@ -381,31 +381,75 @@ gcloud run deploy standbai-api --source . --region asia-southeast2 \
 
 ## 7. Further Notes
 
-### 7.1 Current state on `main` (`068b8b1`, verified 2026-10-10)
+### 7.1 Current state on `feat/be-implementation` (verified 2026-10-10, 15:00 WIB)
 
 - **Working, in code:**
   - FastAPI app with **31 routes**: health, events, simulate/runs (tiers, impact, location cards, facilities impacted, health guidance), analysis (ranking, extinguish, carbon, land-water, rain effect, compare, sensitivity, advice, severity, arrival), trust (validation, limits, sources, demo play, export, emergency advisory, evacuation route, lahar warning), layers, attributions.
-  - The README claims "37+"; the real count is 31.
-- **Database `data/udarasiaga.db`** (SQLite + R*Tree, read-only check): 70 volcanoes, 36 forest areas, 992 facilities (583 schools, 330 health, 79 airports), 4,248 hotspots. The `events` and `simulation_runs` tables are empty; runs are JSON files in `data/runs/`. See [`ERD.md`](ERD.md).
-- **Not ready:**
-  - offline by default; `.env` not loaded; CORS `*`; no Dockerfile;
-  - Gemini model ids shut down and the key in the URL query (`app/impact/gemini_advisory.py`);
-  - Indonesian strings in API responses and router tags;
-  - the old product name in the DB file name, settings, descriptions and User-Agent strings.
-- **Tests:** `UDARASIAGA_OFFLINE=1 python -m pytest -q` gives **40 passed** (Python 3.14, run on a copy, 2026-10-10).
+  - **BE-02 done:**
+    - `.env` loaded at startup (`load_dotenv`, environment wins);
+    - `STANDBAI_OFFLINE`, default `0`, with `UDARASIAGA_OFFLINE` accepted as a legacy fallback;
+    - CORS allow-list from `CORS_ORIGINS`;
+    - `.env.example` lists every variable in §4.2.
+  - **BE-03a done:**
+    - DB file `data/standbai.db`;
+    - English OpenAPI tags (`health`, `events`, `simulation`, `analysis`, `trust`, `layers`, `attributions`; module files `lapis2.py`/`lapis3.py` keep their names);
+    - English API title, description and disclaimer;
+    - User-Agent `Standbai/1.0 (+repo URL)`.
+- **Database `data/standbai.db`** (SQLite + R*Tree): 70 volcanoes, 36 forest areas, 992 facilities (583 schools, 330 health, 79 airports), 4,248 hotspots. The `events` and `simulation_runs` tables are empty; runs are JSON files in `data/runs/`. See [`ERD.md`](ERD.md).
+- **Tests:**
+  - `python -m pytest -q` gives **47 passed** (Python 3.14, offline via `tests/conftest.py`, run on a copy without a local `.env`).
+  - With a local `.env` whose `CORS_ORIGINS` is a wildcard, `test_cors_rejects_unlisted_origin` fails, because the app loads `.env` during tests (follow-up in BE-03a).
+- **Lint:** `ruff check .` reports 139 findings, the same as on `main` (mostly trailing whitespace and import order); not introduced by BE-02/03a.
+- **Not ready yet:**
+  - no Dockerfile or deploy (BE-01);
+  - Gemini called directly with shut-down model ids and the key in the URL query (BE-04). **Consequence today:** `/runs/{id}/emergency-advisory` always returns the deterministic template (`status: "expert_fallback"`); `ai_generated` only appears after BE-04;
+  - none of the new city, alert, job or chat endpoints (BE-05…BE-16): the repo has no `Dockerfile`, no `data/cities.json`, no `n8n/` folder, and still exposes the same 31 routes. `JOB_TOKEN`, `AI_SERVICE_URL` and the n8n variables are defined in `app/core/config.py` but nothing uses them yet.
+  - **Indonesian text left in code** (lines with common Indonesian words, 2026-10-10):
+
+    | Folder | Lines | Ticket |
+    |---|---|---|
+    | `app/engine` | 44 | BE-03b |
+    | `app/impact` | 187 | BE-03b |
+    | `app/ingest` | 19 | BE-03b |
+    | `app/db` | 18 | BE-03a follow-up |
+    | `app/schemas` | 4 | BE-03a follow-up |
+    | `app/core` | 2 | BE-03a follow-up |
+    | `config` | 9 | BE-03b |
+    | `scripts` | 193 | BE-03b |
+    | `tests` | 37 | BE-03b |
+
+  - **Fixtures:** `docs/fixtures/*.json` still hold the old product name and Indonesian strings until they're regenerated.
+- **Product name:** the platform is now spelled **StandbAI**. The code still says "Standbai" in `Settings.PROJECT_NAME`, the API description and disclaimer, `/attributions`, the `/sources` title, and fallback labels in `app/impact/routing.py` and `app/impact/gemini_advisory.py` (BE-03a follow-up). Lower-case identifiers (`standbai.db`, `STANDBAI_OFFLINE`, service names) stay as they are.
 
 ### 7.2 Delivery plan (WIB, today)
 
+**Re-planned at 15:00 WIB.** BE-02 and BE-03a are done. **P1 tickets that haven't started by 16:00 are cut** and move to the README's "What's next".
+
 | Time | Hikari Reiziq | Arya Bisma |
 |---|---|---|
-| 08:30–09:00 | BE-00 redeem n8n; BE-02 config | BE-03b English pass (engine/impact) starts |
-| 09:00–10:30 | BE-01 Dockerfile and first Cloud Run deploy (send the URL to Ziddan) | BE-08 `/fires`, BE-09 `/volcanoes` |
-| 10:30–12:30 | BE-05 `/cities`, BE-06 `/area/now` + `/series` | BE-03b continued; BE-10b `refresh-fires` job |
-| 12:30–14:30 | BE-07 outlook v0, BE-10 `/preparedness`, BE-16 `/health` | BE-12 `/map/frames` (P1) |
-| 14:30–16:00 | BE-11 n8n + Telegram (subscribe, status, digest) | BE-13 timeline (P1); BE-15 history (P1) |
-| 16:00–17:30 | BE-04 advisory via AI; BE-14 `/chat` if green; redeploy | BE-15 continued; README numbers |
-| 17:30–18:00 | BE-17 live smoke test, CORS for Vercel | BE-17 tests |
+| 15:00–15:45 | BE-01 Dockerfile and first Cloud Run deploy (send the URL to Ziddan and Arkan) | BE-08 `/fires`, BE-09 `/volcanoes` |
+| 15:45–16:45 | BE-05 `/cities`, BE-06 `/area/now` + `/series`, BE-10 `/preparedness` | BE-10b `refresh-fires` job; BE-03b English pass (responses first, then comments) |
+| 16:45–17:30 | BE-07 outlook v0; BE-11 Telegram bot (subscribe, status, digest) | BE-03b continued; BE-03a follow-ups if Hikari is busy |
+| 17:30–18:00 | BE-16 `/health`; redeploy; BE-17 live smoke test, CORS for the Vercel domain | BE-17 `pytest` and `ruff`; README status |
 | 18:00 | **Feature freeze** | |
+| After freeze | Only fixes; no new endpoints | |
+
+**Likely cut today** (P1): BE-04, BE-12, BE-13, BE-14 (optional chat), BE-15 (history + news).
+
+**Status at 15:20 WIB:** nothing from the first row had started (no `Dockerfile`, no new router, no commit since 12:42). So the **order** below matters more than the clock times.
+
+**Critical path for the web app.** The frontend needs exactly these, in this order, plus a public URL:
+
+| # | Needed by the web app | Ticket | Owner |
+|---|---|---|---|
+| 1 | A public API URL with CORS for the Vercel domain | BE-01 | Hikari |
+| 2 | `GET /cities` | BE-05 | Hikari |
+| 3 | `GET /area/now`, `GET /area/series` | BE-06 | Hikari |
+| 4 | `POST /preparedness` | BE-10 | Hikari |
+| 5 | `GET /fires`, `GET /volcanoes` | BE-08, BE-09 | Arya |
+| 6 | `GET /area/outlook` (heuristic v0) | BE-07 | Hikari |
+
+The Telegram bot (BE-11) is **not** needed by the web app. It's a headline feature, so build it right after row 6, in a minimal form (`/subscribe`, `/status`, daily digest). Instant alerts are P1.
 
 ### 7.3 Risks
 
@@ -417,7 +461,8 @@ gcloud run deploy standbai-api --source . --region asia-southeast2 \
 ### 7.4 Open questions
 
 - Telegram bot username (Hikari creates it with BotFather) → `VITE_TELEGRAM_BOT_URL` for Ziddan.
-- Who owns the GCP project and billing? Decide by 09:00.
+- Who owns the GCP project and billing? Decide now; BE-01 can't start without it.
+- **Arya's tickets** (BE-03b, BE-08, BE-09, the `refresh-fires` job): there are no commits on this branch from Arya since 8 Oct. Confirm he has started. If BE-08 and BE-09 aren't started by 16:00, Hikari takes them, because the web app needs `/fires` and `/volcanoes`.
 
 ## 8. Shared tickets with other repos
 
@@ -425,6 +470,31 @@ gcloud run deploy standbai-api --source . --region asia-southeast2 \
 - **AI:** BE-04 and BE-14 depend on AI-03/AI-04; the `fire_1m` upgrade depends on AI-06.
 
 ## 9. Task board
+
+**Status on 2026-10-10, 15:00 WIB** (branch `feat/be-implementation`). Update the Status column as tickets land.
+
+| Ticket | Title | Owner | Priority | Status |
+|---|---|---|---|---|
+| BE-00 | Redeem sponsor perks | Hikari | P0 | To check |
+| BE-01 | Containerise and deploy to Cloud Run | Hikari | P0 | To do |
+| BE-02 | Configuration | Hikari | P0 | **Done** |
+| BE-03a | English and rename: API layer | Hikari | P0 | **Done** (follow-ups listed) |
+| BE-03b | English pass: engine, impact, scripts | Arya | P0 | To do |
+| BE-04 | Advisory through the AI service | Hikari | P1 | To do (likely cut) |
+| BE-05 | `/cities` | Hikari | P0 | To do |
+| BE-06 | `/area/now`, `/area/series` | Hikari | P0 | To do |
+| BE-07 | `/area/outlook` heuristic v0 | Hikari | P0 | To do |
+| BE-08 | `/fires` | Arya | P0 | To do |
+| BE-09 | `/volcanoes` | Arya | P0 | To do |
+| BE-10 | `/preparedness` | Hikari | P0 | To do |
+| BE-10b | Job endpoints | Arya / Hikari | P0 | To do |
+| BE-11 | Telegram bot via n8n | Hikari | P0 / P1 | To do |
+| BE-12 | `/map/frames` | Arya | P1 | To do (likely cut) |
+| BE-13 | `/events/timeline` | Arya | P1 | To do (likely cut) |
+| BE-14 | `/chat` (optional) | Hikari | P1 | To do (likely cut) |
+| BE-15 | History + news | Arya | P1 | To do (likely cut) |
+| BE-16 | `/health` details | Hikari | P0 | To do |
+| BE-17 | Final checks | Hikari, Arya | P0 | To do |
 
 ### BE-00 Redeem sponsor perks (P0)
 - **Owner:** Hikari · **Est.:** 10 min
@@ -449,18 +519,34 @@ gcloud run deploy standbai-api --source . --region asia-southeast2 \
   4. Add the new variables to `.env.example`.
 - **Files:** `app/core/config.py`, `app/core/offline.py`, `app/main.py`, `.env.example`, `requirements.txt`.
 - **Acceptance:** `uvicorn app.main:app` picks up `.env`; a request from an unlisted origin gets no CORS header.
+- **Status: Done** (2026-10-10, Hikari, commit `ff36cfb`).
+  - Verified: `load_dotenv` in `app/core/config.py`; legacy fallback in `app/core/offline.py`; `tests/test_config.py` passes without a local `.env`.
 
 ### BE-03a English and rename: API layer (P0)
 - **Owner:** Hikari · **Est.:** 45 min
 - **Steps:**
-  1. `Settings.PROJECT_NAME="Standbai"`, with English description and disclaimer.
+  1. `Settings.PROJECT_NAME="StandbAI"`, with English description and disclaimer.
   2. English router tags.
   3. `/attributions` description.
   4. Rename the DB file `data/udarasiaga.db` to `data/standbai.db` (update `app/db/session.py` and the scripts).
   5. User-Agent strings `Standbai/1.0 (+repo URL)`.
-  6. The export footer describes Standbai only.
+  6. The export footer describes StandbAI only.
   7. Translate Indonesian strings in `app/api/*`.
 - **Acceptance:** `grep -rniE "udara ?siaga" app scripts config` returns nothing; `/docs` shows English tags.
+- **Status: Done** (2026-10-10, Hikari, commit `574ee68`).
+  - Verified: `data/standbai.db`; English tags; the old name only appears as the legacy `UDARASIAGA_OFFLINE` fallback in `app/core/offline.py`.
+  - Note: the code says `PROJECT_NAME="Standbai"`; the product spelling changed to **StandbAI** afterwards (follow-up 1).
+- **Remaining follow-ups** (small; whoever is free):
+  1. **Product name:** rename product strings from "Standbai" to **"StandbAI"**:
+     - `Settings.PROJECT_NAME`, description and disclaimer in `app/core/config.py`;
+     - `/attributions` text in `app/api/attributions.py`;
+     - the `/sources` title in `app/api/lapis3.py`;
+     - fallback labels in `app/impact/routing.py` and `app/impact/gemini_advisory.py`.
+     - Keep lower-case identifiers (`standbai.db`, `STANDBAI_OFFLINE`) and the `Standbai/1.0` User-Agent.
+  2. **English text:** translate the Indonesian left in `app/db` (18 lines), `app/schemas` (4) and `app/core` (2).
+  3. **Test isolation:** make the tests ignore a developer's local `.env`, for example by setting `CORS_ORIGINS=http://localhost:5173` in `tests/conftest.py` before the app is imported. Today `test_cors_rejects_unlisted_origin` fails when `.env` has a wildcard `CORS_ORIGINS`.
+  4. **Fixtures:** regenerate `docs/fixtures/*.json` with `scripts/generators/generate_fixtures.py` after BE-03b, so the examples carry the new name and English strings. Five fixture files still carry the old name or Indonesian text.
+  5. **Repo hygiene (team decision):** `scripts/github/*` (10 files) are automation for another project's GitHub board and aren't used by StandbAI. They contain that project's repository name and Indonesian text. Either delete the folder or leave it; nothing in the product depends on it.
 
 ### BE-03b English pass: engine, impact, scripts (P0)
 - **Owner:** Arya · **Est.:** 2 h, can overlap

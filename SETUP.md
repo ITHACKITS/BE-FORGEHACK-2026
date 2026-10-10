@@ -1,4 +1,4 @@
-# SETUP: Standbai Backend API
+# SETUP: StandbAI Backend API
 
 ## Prerequisites
 - **Python 3.12 or newer.** The test suite passed on Python 3.14 on 2026-10-10. The Docker image uses 3.12.
@@ -58,6 +58,9 @@ ruff check .
 Run scripts from the repository root so that `app` is importable.
 
 ## Deploy to Google Cloud Run (ticket BE-01)
+
+> **Status: not done yet.** The repo has no `Dockerfile` today. These steps are the plan; step 2 creates the file.
+
 1. Install the gcloud CLI, run `gcloud auth login`, and select a project with billing enabled.
 2. Create a `Dockerfile` and `.dockerignore` as in `PRD.md` §4.10.
 3. Create the secrets:
@@ -77,6 +80,9 @@ Run scripts from the repository root so that `app` is importable.
 5. Check `curl <url>/health` and open `<url>/docs`. Share the URL with the frontend (`VITE_API_BASE_URL`) and AI teams.
 
 ## n8n and the Telegram bot (ticket BE-11)
+
+> **Status: not built yet.** There is no `n8n/` folder, and the endpoints these workflows call (`/jobs/*`, `/alerts/*`) don't exist yet. Build them first (BE-10b, BE-11).
+
 1. Redeem the ForgeHacks **n8n Cloud Pro** perk (Discord) and open your n8n workspace.
 2. Create a bot with **@BotFather** (`/newbot`). Store the token only as an n8n **Telegram credential**.
 3. In n8n, create an HTTP header credential `X-Job-Token: <job-token>`.
@@ -95,6 +101,7 @@ Run scripts from the repository root so that `app` is importable.
 
 | Symptom | Fix |
 |---|---|
+| `test_cors_rejects_unlisted_origin` fails locally | Your `.env` sets `CORS_ORIGINS` to a wildcard and the app loads it during tests. Remove the wildcard from `.env` or run tests with `CORS_ORIGINS=http://localhost:5173 python -m pytest -q` (permanent fix: BE-03a follow-up 3) |
 | Live data never loads | Check that `STANDBAI_OFFLINE` is `0` (the default) |
 | Variables in `.env` are ignored | `.env` must be in the repo root; a variable already exported in the shell wins |
 | CORS error from the web app | Add the web origin to `CORS_ORIGINS` |

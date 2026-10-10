@@ -1,6 +1,6 @@
-# Standbai API Contract
+# StandbAI API Contract
 
-The interface contract for the Standbai backend.
+The interface contract for the StandbAI backend.
 - **Example responses:** taken from the test fixtures in `docs/fixtures/`.
 - **Language:** example string values are shown in English, matching the English pass (`PRD.md`, BE-03). The fixture files still hold the earlier Indonesian strings until `scripts/generators/generate_fixtures.py` is re-run after that pass.
 - **New endpoints:** city-centred endpoints, preparedness, alerts, jobs, chat and history are specified in [`../PRD.md`](../PRD.md) §4.5 and in the web app PRD §5. See section 4 below.
@@ -24,7 +24,7 @@ The interface contract for the Standbai backend.
 
 ## 2. Endpoint summary (existing)
 
-Status checked against the routers on `main` (`068b8b1`), 2026-10-10: **31 routes are implemented**. Rows marked **Not implemented** are documented here but aren't in the code.
+Status checked against the routers on `feat/be-implementation`, 2026-10-10: **31 routes are implemented**. In `/docs` (OpenAPI), the groups appear under the English tags `health`, `events`, `simulation`, `analysis` (formerly `lapis2`), `trust` (formerly "Lapis 3"), `layers` and `attributions`; the module files are still `app/api/lapis2.py` and `app/api/lapis3.py`. Rows marked **Not implemented** are documented here but aren't in the code.
 
 | Category | Method | Endpoint | Description | Status |
 |---|---|---|---|---|
@@ -102,7 +102,7 @@ sequenceDiagram
 {
   "status": "healthy",
   "version": "0.1.0",
-  "disclaimer": "WARNING: Standbai is preparedness software...",
+  "disclaimer": "WARNING: StandbAI is preparedness software...",
   "offline_mode": false,
   "sources": {
     "openmeteo": "cached_offline",
@@ -142,7 +142,7 @@ sequenceDiagram
   "members_source": "synthetic_spread",
   "n_members": 5,
   "horizon_hours": 6,
-  "disclaimer": "WARNING: Standbai...",
+  "disclaimer": "WARNING: StandbAI...",
   "assumptions_used": [
     { "parameter": "mer_from_column_height", "status": "sourced", "source": "Mastin et al. 2009...", "caveat": null }
   ]
@@ -185,7 +185,7 @@ sequenceDiagram
   "schools_exposed": { "min": 2, "median": 5, "max": 12 },
   "healthcare_exposed": { "min": 0, "median": 2, "max": 4 },
   "ispu": { "available": false, "reason": "D13b PM2.5 emission factor is currently placeholder; ISPU category calculation withheld." },
-  "disclaimer": "WARNING: Standbai..."
+  "disclaimer": "WARNING: StandbAI..."
 }
 ```
 
@@ -401,7 +401,7 @@ sequenceDiagram
 - **Example** (see `docs/fixtures/sources.json`):
 ```json
 {
-  "title": "Standbai data source catalogue",
+  "title": "StandbAI data source catalogue",
   "verified_sources": [
     { "id": "D01", "name": "Open-Meteo Weather API", "status": "S", "license": "CC BY 4.0" },
     { "id": "D03", "name": "NASA FIRMS (MODIS & VIIRS)", "status": "S", "license": "NASA Open Data Policy" },
@@ -446,7 +446,7 @@ sequenceDiagram
   "impact": { "population_exposed": { "min": 2420.0, "median": 8650.0, "max": 18400.0 } },
   "advice": { "...": "..." },
   "assumptions_used": [ "..." ],
-  "disclaimer": "WARNING: Standbai..."
+  "disclaimer": "WARNING: StandbAI..."
 }
 ```
 
@@ -534,6 +534,8 @@ sequenceDiagram
 }
 ```
 
+> **Today's behaviour:** the Gemini model ids in `app/impact/gemini_advisory.py` are retired, so the endpoint always returns the deterministic template (`gemini_briefing.status` is `"expert_fallback"`). `"ai_generated"` appears only after BE-04 routes the advisory through the AI service.
+>
 > The current code uses the keys `gemini_briefing` and `whatsapp_broadcast` (`app/impact/advisory.py`, `app/impact/gemini_advisory.py`). `llm_briefing` and `public_broadcast` above are the target names for BE-03/BE-04; keep the old keys until the frontend switches. The `remote_learning_mandate` field shown here is documentation only and isn't produced by the code on `main`.
 
 ---

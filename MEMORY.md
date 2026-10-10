@@ -1,4 +1,4 @@
-# MEMORY: Standbai Backend API (`BE-FORGEHACK-2026`)
+# MEMORY: StandbAI Backend API (`BE-FORGEHACK-2026`)
 
 > ## Language rule (read first)
 > **Always use English** in this repository: code, comments, docstrings, API values and error messages, OpenAPI tags, docs, commit messages, and every explanation written by an AI assistant. ForgeHacks is an international hackathon judged in English.
@@ -16,7 +16,7 @@ Shared memory for people and coding agents working on the backend. Keep **Progre
 - **Rules:** build during the event; use AI honestly; "a half-working project is okay; overstating it isn't."
 
 ## 2. Product
-- **Standbai** tells families in Indonesia where wildfire smoke and volcanic ash will go, and what to prepare before it arrives.
+- **StandbAI** tells families in Indonesia where wildfire smoke and volcanic ash will go, and what to prepare before it arrives.
 - **This repo is the single public API** for:
   - the web app (`FE-FORGEHACK-2026`);
   - n8n Cloud, which runs the scheduled jobs and the **Telegram bot** (`/subscribe`, `/status`, daily digest, instant alerts).
@@ -64,7 +64,7 @@ flowchart LR
 | `tests/` | `test_physics`, `test_integrity`, `test_database`, `test_lapis2`, `test_lapis3` |
 | `docs/` | `SPEC.md` (engine spec), `API_CONTRACT.md`, `SOURCES.md`, `DATASETS.md`, `DATABASE_ARCHITECTURE.md` (superseded by `ERD.md`), `fixtures/` |
 
-## 6. Progress (verified on `main` `068b8b1`, 2026-10-10)
+## 6. Progress (verified on `feat/be-implementation`, 2026-10-10 15:20 WIB)
 - **Working, in code:**
   - 31 routes covering simulation runs (volcano and fire), probability tiers per hour, impacts as ranges, facility decision cards, fire-cluster ranking, "extinguish a hotspot", carbon, rain effect, scenario compare, sensitivity, advice, severity, arrival, validation, limits, sources, export, emergency advisory, evacuation route, lahar warning, map layers.
   - DB: 70 volcanoes, 36 forest areas, 992 facilities (583 schools, 330 health, 79 airports), 4,248 FIRMS hotspots.
@@ -73,8 +73,15 @@ flowchart LR
   - Gemini called directly with shut-down model ids and the key in the URL (BE-04);
   - Indonesian strings in engine and impact responses (BE-03b; the API layer and product name are done in BE-03a);
   - no city endpoints, preparedness, alerts or `/chat` yet (BE-05…BE-14).
-- **Done on `feat/be-implementation` (2026-10-10):** BE-02 (`.env` loaded, `STANDBAI_OFFLINE` default `0` with legacy fallback, CORS allow-list from `CORS_ORIGINS`) and BE-03a (Standbai name, `data/standbai.db`, English tags `health, events, simulation, analysis, trust, layers, attributions`, `Standbai/1.0` User-Agent).
-- **Tests:** 47 passed (`pytest -q`, offline via `tests/conftest.py`, Python 3.13, 2026-10-10). `ruff check .` reports 139 errors that pre-date BE-02, mostly whitespace in `scripts/`.
+- **Done on `feat/be-implementation` (2026-10-10):** BE-02 (`.env` loaded, `STANDBAI_OFFLINE` default `0` with legacy fallback, CORS allow-list from `CORS_ORIGINS`) and BE-03a (English API metadata, `data/standbai.db`, English tags `health, events, simulation, analysis, trust, layers, attributions`, `Standbai/1.0` User-Agent).
+- **Tests:** 47 passed (`pytest -q`, offline via `tests/conftest.py`; Python 3.13 on the developer machine, and again on Python 3.14 in a clean copy without a local `.env`, 2026-10-10). `ruff check .` reports 139 errors that pre-date BE-02, mostly whitespace in `scripts/`.
+  - With a local `.env` whose `CORS_ORIGINS` is a wildcard, `test_cors_rejects_unlisted_origin` fails, because the app loads `.env` during tests. See BE-03a follow-up 3 in `PRD.md`.
+- **Open follow-ups** (`PRD.md`, BE-03a):
+  - product strings in code still say "Standbai", so rename them to "StandbAI";
+  - Indonesian lines left in `app/db`, `app/schemas`, `app/core`;
+  - test isolation from `.env`;
+  - regenerate `docs/fixtures/` (5 files still carry the old name or Indonesian text);
+  - `scripts/github/*` (10 files) automate another project's GitHub board and aren't used by StandbAI: delete or leave (team decision).
 
 ## 7. Conventions
 - **Times:** UTC ISO 8601.
@@ -89,7 +96,7 @@ flowchart LR
 ## 8. Decision log
 | Date | Decision | Why |
 |---|---|---|
-| 2026-10-09 | Product name **Standbai**; English API and docs | International judging |
+| 2026-10-09 | One product name for the platform; English API and docs | International judging |
 | 2026-10-09 | Deploy on Google Cloud Run (`asia-southeast2`), 1 instance, CPU always allocated | Background simulations and file-based runs need one warm instance |
 | 2026-10-10 | Backend is the single public API (BFF) for web, Telegram/n8n and chat | One contract, one place for keys and validation |
 | 2026-10-10 | City-centred endpoints follow the FE prototype's data needs; contracts shared in both PRDs | Lets FE and BE build in parallel |
@@ -99,6 +106,11 @@ flowchart LR
 | 2026-10-10 | All LLM calls move behind the AI service (Featherless primary, Gemini fallback) | One gateway, no LLM keys in BE |
 | 2026-10-10 | Additive API changes only (`hazard_radius_km` next to `radius_bahaya_km`) | Don't break the existing dashboard on deadline day |
 | 2026-10-10 | No Kafka, Spark or MinIO today; scale-up path: GCS, Pub/Sub, BigQuery | Data volume fits SQLite/DuckDB |
+| 2026-10-10 | `.env` loaded at startup; `STANDBAI_OFFLINE` defaults to `0`; `UDARASIAGA_OFFLINE` accepted as a legacy fallback for one release | Deployable by default without breaking old scripts |
+| 2026-10-10 | CORS allow-list from `CORS_ORIGINS` (no wildcard in production) | Only our web app can call the API from a browser |
+| 2026-10-10 | Database file renamed to `data/standbai.db` | Matches the product name |
+| 2026-10-10 | English OpenAPI tags (`analysis`, `trust`, …); module files `lapis2.py`, `lapis3.py` keep their names for now | Clear docs without a risky refactor on deadline day |
+| 2026-10-10 | Product name spelled **StandbAI** (capital "AI"); lower-case slugs unchanged | Team decision; highlights the AI |
 
 ## 9. Links
 - Frontend: https://github.com/ITHACKITS/FE-FORGEHACK-2026 · AI: https://github.com/ITHACKITS/AI-FORGEHACK-2026
