@@ -1,3 +1,24 @@
+[project]
+name = "be-forgehack-2026"
+version = "0.1.0"
+description = "StandbAI Backend API"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "pydantic>=2.7.0",
+    "numpy>=1.26.0",
+    "scipy>=1.13.0",
+    "pandas>=2.2.0",
+    "geopandas>=1.0.0",
+    "shapely>=2.0.0",
+    "rasterio>=1.4.0",
+    "pyproj>=3.6.0",
+    "httpx>=0.27.0",
+    "PyYAML>=6.0.1",
+]
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"
