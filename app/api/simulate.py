@@ -18,6 +18,8 @@ from app.impact.exposure import (
     evaluate_decision_card,
     get_exposed_facilities_list,
     get_health_and_mask_guidance,
+    strip_removed_facilities,
+    strip_removed_impact,
 )
 from app.ingest.firms import FirmsIngest
 from app.ingest.openmeteo import OpenMeteoIngest
@@ -334,7 +336,13 @@ def _get_run_data(run_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
 
     import json
-    return json.loads(save_file.read_text(encoding="utf-8-sig"))
+    data = json.loads(save_file.read_text(encoding="utf-8-sig"))
+    # Runs saved before schools and healthcare were removed still carry them
+    if isinstance(data.get("impact"), dict):
+        data["impact"] = strip_removed_impact(data["impact"])
+    if isinstance(data.get("facilities_impacted"), dict):
+        data["facilities_impacted"] = strip_removed_facilities(data["facilities_impacted"])
+    return data
 
 
 @router.get("/runs/{run_id}")
@@ -409,12 +417,7 @@ def get_location_decision_card(run_id: str, facility_id: str):
     data = _get_run_data(run_id)
     fac_list = data.get("facilities_impacted", {})
     if fac_list:
-        for pool in [
-            fac_list.get("schools", []),
-            fac_list.get("healthcare", []),
-            fac_list.get("airports", []),
-            fac_list.get("evacuation_referral_hospitals", []),
-        ]:
+        for pool in [fac_list.get("airports", [])]:
             for item in pool:
                 if str(item.get("facility_id")) == str(facility_id) or str(item.get("id")) == str(facility_id):
                     return {
@@ -427,7 +430,6 @@ def get_location_decision_card(run_id: str, facility_id: str):
                         "earliest_arrival_h": item.get("arrival_time_earliest_h"),
                         "alert_level": item.get("alert_level"),
                         "action_recommendation": item.get("action_detail"),
-                        "nearest_safe_hospital": item.get("nearest_safe_hospital"),
                     }
 
     raise HTTPException(status_code=404, detail=f"Decision card for facility '{facility_id}' not found for run '{run_id}'.")

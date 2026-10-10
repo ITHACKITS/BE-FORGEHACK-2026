@@ -2,11 +2,12 @@
 app/impact/export.py
 
 Generator Dokumen Ringkasan Eksekutif & Lembar Aksi Darurat (Printable HTML & JSON).
-Dirancang khusus untuk pimpinan BPBD, Dinas Kesehatan, Satuan Pendidikan, dan Relawan Lapangan.
+Dirancang khusus untuk pimpinan BPBD, Dinas Kesehatan, dan Relawan Lapangan.
 Bebas dari tabel parameter matematika mentah internal, berfokus penuh pada instruksi taktis lapangan,
-edukasi APD medis, perlindungan kelompok rentan, dan jaringan evakuasi fasilitas kesehatan.
+edukasi APD medis, perlindungan kelompok rentan, dan ruang udara bandara.
 """
 
+from html import escape
 from typing import Any, Dict
 
 
@@ -29,8 +30,7 @@ def generate_printable_html(export_data: Dict[str, Any]) -> str:
     child = impact.get("children_exposed", {"min": 0, "median": 0, "max": 0})
     elder = impact.get("elderly_exposed", {"min": 0, "median": 0, "max": 0})
     area = impact.get("area_exposed_km2", {"min": 0, "median": 0, "max": 0})
-    schools_metric = impact.get("schools_exposed", {"min": 0, "median": 0, "max": 0})
-    hc_metric = impact.get("healthcare_exposed", {"min": 0, "median": 0, "max": 0})
+    airports_metric = impact.get("airports_exposed", {"min": 0, "median": 0, "max": 0})
 
     def fmt_r(m: dict) -> str:
         return f"{m.get('min', 0):,.0f} &ndash; <strong>{m.get('median', 0):,.0f}</strong> &ndash; {m.get('max', 0):,.0f}"
@@ -39,45 +39,25 @@ def generate_printable_html(export_data: Dict[str, Any]) -> str:
     alert_level = advisory.get("alert_level", "SIAGA TANGGAP DARURAT")
     badge_bg = advisory.get("badge_bg", "#dc2626")
 
-    # Ambil daftar RS rujukan aman terdekat jika tersedia
+    # Airports inside the plume path (facility names are data, so they are escaped)
     facilities = export_data.get("facilities", {})
-    safe_hospitals = facilities.get("evacuation_referral_hospitals", [])[:4]
-    schools_at_risk = facilities.get("schools", [])[:5]
-
-    hospitals_rows = ""
-    if safe_hospitals:
-        for h in safe_hospitals:
-            hospitals_rows += f"""
+    airports_at_risk = facilities.get("airports", [])[:6]
+    if airports_at_risk:
+        airports_rows = "".join(
+            f"""
             <tr>
-              <td><strong>{h.get('name')}</strong><br><small style='color:#64748b;'>{h.get('district', '-')}</small></td>
-              <td><span style='color:#059669;font-weight:700;'>{h.get('status_badge', 'ZONA AMAN')}</span></td>
-              <td><strong>{h.get('distance_from_epicenter_km', '-')} km</strong></td>
-              <td><small>{h.get('emergency_hotline', 'SPGDT 119')}</small></td>
+              <td><strong>{escape(str(a.get('name', '-')))}</strong><br><small style='color:#64748b;'>{escape(str(a.get('district', '-')))}</small></td>
+              <td><strong style='color:#dc2626;'>{int(a.get('exposure_pct', 0))}%</strong></td>
+              <td>{escape(str(a.get('arrival_time_earliest_h') if a.get('arrival_time_earliest_h') is not None else '-'))} jam</td>
+              <td><small>{escape(str(a.get('recommendation', 'Coordinate NOTAM / ASHTAM')))}</small></td>
             </tr>
             """
+            for a in airports_at_risk
+        )
     else:
-        hospitals_rows = """
+        airports_rows = """
         <tr>
-          <td colspan='4' style='text-align:center;color:#64748b;'>Data spesifik fasilitas kesehatan rujukan dimuat dari peta taktis. Hubungi SPGDT 119 untuk koordinasi ambulans.</td>
-        </tr>
-        """
-
-    schools_rows = ""
-    if schools_at_risk:
-        for s in schools_at_risk:
-            prob_pct = s.get('exposure_pct', int(round(s.get('exposure_probability', 0) * 100)))
-            schools_rows += f"""
-            <tr>
-              <td><strong>{s.get('name')}</strong><br><small style='color:#64748b;'>{s.get('district', '-')}</small></td>
-              <td><strong style='color:#dc2626;'>{prob_pct}%</strong></td>
-              <td><span style='background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:3px;font-size:8pt;font-weight:600;'>{s.get('recommendation', 'ALIHKAN KE PJJ')}</span></td>
-              <td><small>{s.get('action_detail', '-')}</small></td>
-            </tr>
-            """
-    else:
-        schools_rows = """
-        <tr>
-          <td colspan='4' style='text-align:center;color:#64748b;'>Seluruh sekolah berada di luar batas ambang paparan langsung (&lt; 5% risiko). KBM tatap muka dapat berlangsung normal.</td>
+          <td colspan='4' style='text-align:center;color:#64748b;'>Tidak ada bandara di dalam batas ambang paparan (&lt; 5% risiko).</td>
         </tr>
         """
 
@@ -250,10 +230,10 @@ def generate_printable_html(export_data: Dict[str, Any]) -> str:
         <td>Luas area kumulatif yang terlewati konsentrasi berbahaya</td>
       </tr>
       <tr>
-        <td>Fasilitas Publik Berisiko</td>
-        <td class="mono">Sekolah: {fmt_r(schools_metric)} | Faskes: {fmt_r(hc_metric)}</td>
+        <td>Bandara Berisiko</td>
+        <td class="mono">{fmt_r(airports_metric)}</td>
         <td>Unit</td>
-        <td>Fasilitas di dalam jangkauan trajektori abu/asap</td>
+        <td>Bandara di dalam jangkauan trajektori abu/asap</td>
       </tr>
     </tbody>
   </table>
@@ -276,33 +256,18 @@ def generate_printable_html(export_data: Dict[str, Any]) -> str:
     </div>
   </div>
 
-  <h2>3. Protokol Satuan Pendidikan (Sekolah Aman Bencana - SPAB)</h2>
+  <h2>3. Bandara di Jalur Sebaran</h2>
   <table>
     <thead>
       <tr>
-        <th>Nama Sekolah</th>
+        <th>Bandara</th>
         <th>Peluang Paparan</th>
-        <th>Instruksi Operasional</th>
-        <th>Tindakan Dini yang Wajib Dilakukan</th>
+        <th>Tiba Paling Cepat</th>
+        <th>Tindakan</th>
       </tr>
     </thead>
     <tbody>
-      {schools_rows}
-    </tbody>
-  </table>
-
-  <h2>4. Koridor Evakuasi Medis &amp; Rumah Sakit Rujukan Aman Terdekat</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Rumah Sakit Rujukan Aman</th>
-        <th>Status Zona Udara</th>
-        <th>Jarak dari Episentrum</th>
-        <th>Kontak Darurat / Call Center</th>
-      </tr>
-    </thead>
-    <tbody>
-      {hospitals_rows}
+      {airports_rows}
     </tbody>
   </table>
 

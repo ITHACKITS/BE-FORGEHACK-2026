@@ -83,21 +83,20 @@ def test_facility_repository_spatial_bbox_latency():
     assert elapsed_ms < 50.0, f"Kueri R*Tree spasial harus < 50 ms, didapat {elapsed_ms:.2f} ms"
 
 
-def test_facilities_endpoint_lod_and_zoom():
-    """Memverifikasi endpoint /layers/facilities mendukung zoom LOD dan limit."""
-    # 1. Zoom jauh (skala nasional) -> Hanya bandara dan RS
-    res_zoom_low = client.get("/layers/facilities?bbox=106.0,-7.0,108.0,-6.0&zoom=6&limit=100")
-    assert res_zoom_low.status_code == 200
-    data_low = res_zoom_low.json()
-    types_low = {f["properties"]["facility_type"] for f in data_low["features"]}
-    assert "school" not in types_low, "Pada zoom rendah (skala nasional) sekolah disembunyikan agar peta tidak penuh"
+def test_facilities_endpoint_serves_airports_only():
+    """Schools and healthcare stay in SQLite but the API only serves airports (2026-10-10)."""
+    for zoom in (6, 12):
+        res = client.get(f"/layers/facilities?bbox=105.0,-7.5,108.5,-6.0&zoom={zoom}&limit=500")
+        assert res.status_code == 200
+        types = {f["properties"]["facility_type"] for f in res.json()["features"]}
+        assert types <= {"airport"}, f"zoom {zoom} returned {types}"
 
-    # 2. Zoom dekat (skala lokal) -> Sekolah muncul
-    res_zoom_high = client.get("/layers/facilities?bbox=106.0,-7.0,108.0,-6.0&zoom=12&limit=100")
-    assert res_zoom_high.status_code == 200
-    data_high = res_zoom_high.json()
-    types_high = {f["properties"]["facility_type"] for f in data_high["features"]}
-    assert "school" in types_high, "Pada zoom tinggi sekolah harus muncul"
+    res_school = client.get("/layers/facilities?bbox=95.0,-11.0,141.0,6.0&facility_type=school&limit=500")
+    assert res_school.status_code == 200
+    assert res_school.json()["features"] == []
+
+    assert FacilityRepository.count_all() == FacilityRepository.count_all("airport") > 0
+    assert FacilityRepository.count_all("school") == 0
 
 
 def test_hotspot_repository_event_query():

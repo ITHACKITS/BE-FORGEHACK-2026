@@ -28,7 +28,7 @@ def get_attributions():
             },
             {
                 "source": "OpenStreetMap Contributors",
-                "data": "Schools, health facilities, airports and water bodies",
+                "data": "Airports and water bodies",
                 "license": "Open Database License (ODbL) 1.0",
                 "url": "https://www.openstreetmap.org/copyright"
             },

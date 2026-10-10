@@ -221,27 +221,19 @@ def test_evacuation_route_endpoint(sample_volcano_run):
     assert coords[-1] == [to_lat, to_lon]
 
 
-def test_facilities_island_contiguity_and_no_ocean_facilities(sample_volcano_run):
-    """
-    Uji kontiguitas daratan:
-    Sekolah di Sumatera TIDAK BOLEH dirujuk ke faskes di seberang laut (Jawa).
-    Semua fasilitas di database berada di daratan.
-    """
-    from app.impact.exposure import get_landmass_region
-
+def test_facilities_impacted_lists_airports_only(sample_volcano_run):
+    """Run results carry no school or healthcare data, only airports."""
     resp = client.get(f"/runs/{sample_volcano_run}/facilities-impacted?min_prob=0.01")
     assert resp.status_code == 200
     data = resp.json()
-    schools = data.get("schools", [])
+    for removed in ("schools", "healthcare", "evacuation_referral_hospitals", "total_schools_at_risk"):
+        assert removed not in data
+    assert all(f["facility_type"] == "airport" for f in data["facilities_impacted"])
 
-    for sch in schools:
-        sch_region = get_landmass_region(sch)
-        target_h = sch.get("nearest_safe_hospital")
-        if target_h:
-            h_region = get_landmass_region(target_h)
-            # Jika sekolah di Sumatera, rujukan RS wajib di Sumatera
-            if sch_region == "sumatera":
-                assert h_region == "sumatera", f"Sekolah {sch['name']} dirujuk melintasi laut ke {target_h['name']}"
-            elif sch_region == "jawa":
-                assert h_region == "jawa", f"Sekolah {sch['name']} dirujuk melintasi laut ke {target_h['name']}"
+    impact = client.get(f"/runs/{sample_volcano_run}/impact").json()
+    assert "schools_exposed" not in impact and "healthcare_exposed" not in impact
+    assert "airports_exposed" in impact
+
+    advisory = client.get(f"/runs/{sample_volcano_run}/emergency-advisory").json()
+    assert "school_guidance" not in advisory and "health_guidance" not in advisory
 

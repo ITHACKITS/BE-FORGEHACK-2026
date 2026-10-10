@@ -1,14 +1,21 @@
 """
 app/db/repositories/facility_repo.py
 
-Repository akses data fasilitas publik (sekolah, faskes, bandara)
-memanfaatkan indeks spasial R*Tree SQLite untuk kueri BBOX sub-milidetik.
+Public facility access backed by the SQLite R*Tree index.
+Reads only return the types in PUBLIC_FACILITY_TYPES (airports); other rows stay stored.
 """
 
 import json
 from typing import Any, Dict, List, Optional
 
+from app.core.config import PUBLIC_FACILITY_TYPES
 from app.db.session import get_db, get_db_connection
+
+_TYPE_PLACEHOLDERS = ", ".join("?" for _ in PUBLIC_FACILITY_TYPES)
+
+
+def _is_public(facility_type: Optional[str]) -> bool:
+    return facility_type is None or facility_type in PUBLIC_FACILITY_TYPES
 
 
 class FacilityRepository:
@@ -26,25 +33,21 @@ class FacilityRepository:
         Kueri fasilitas di dalam batas kotak (Bounding Box) menggunakan indeks R*Tree.
         Mendukung Level-of-Detail (LOD) cerdas jika parameter zoom disertakan.
         """
+        if not _is_public(facility_type):
+            return []
         conn = get_db_connection()
         try:
-            # Bangun kueri berbasis R*Tree join tabel facilities
-            # minX/maxX adalah longitude, minY/maxY adalah latitude
-            params: List[Any] = [lon_min, lon_max, lat_min, lat_max]
+            # R*Tree join: minX/maxX are longitude, minY/maxY are latitude
+            params: List[Any] = [lon_min, lon_max, lat_min, lat_max, *PUBLIC_FACILITY_TYPES]
             where_clauses = [
                 "idx.minX >= ? AND idx.maxX <= ?",
-                "idx.minY >= ? AND idx.maxY <= ?"
+                "idx.minY >= ? AND idx.maxY <= ?",
+                f"f.facility_type IN ({_TYPE_PLACEHOLDERS})",
             ]
 
             if facility_type:
                 where_clauses.append("f.facility_type = ?")
                 params.append(facility_type)
-            elif zoom is not None:
-                # Hierarchical LOD: di zoom jauh jangan tampilkan sekolah kecil agar peta bersih
-                if zoom < 8:
-                    where_clauses.append("f.facility_type IN ('airport', 'healthcare')")
-                elif zoom < 10:
-                    where_clauses.append("(f.facility_type IN ('airport', 'healthcare') OR f.name LIKE '%SMA%' OR f.name LIKE '%SMK%')")
 
             sql = f"""
                 SELECT f.facility_id, f.name, f.facility_type, f.latitude, f.longitude, f.district, f.province, f.metadata_json
@@ -85,8 +88,8 @@ class FacilityRepository:
         try:
             cursor = conn.execute(
                 "SELECT facility_id, name, facility_type, latitude, longitude, district, province, metadata_json "
-                "FROM facilities WHERE facility_id = ?",
-                (facility_id,)
+                f"FROM facilities WHERE facility_id = ? AND facility_type IN ({_TYPE_PLACEHOLDERS})",
+                (facility_id, *PUBLIC_FACILITY_TYPES)
             )
             row = cursor.fetchone()
             if not row:
@@ -110,13 +113,18 @@ class FacilityRepository:
         facility_type: Optional[str] = None,
         limit: Optional[int] = None
     ) -> List[Dict[str, Any]]:
-        """Mengambil seluruh fasilitas dengan filter opsional."""
+        """All public facilities, optionally filtered by type."""
+        if not _is_public(facility_type):
+            return []
         conn = get_db_connection()
         try:
-            sql = "SELECT facility_id, name, facility_type, latitude, longitude, district, province, metadata_json FROM facilities"
-            params: List[Any] = []
+            sql = (
+                "SELECT facility_id, name, facility_type, latitude, longitude, district, province, metadata_json "
+                f"FROM facilities WHERE facility_type IN ({_TYPE_PLACEHOLDERS})"
+            )
+            params: List[Any] = list(PUBLIC_FACILITY_TYPES)
             if facility_type:
-                sql += " WHERE facility_type = ?"
+                sql += " AND facility_type = ?"
                 params.append(facility_type)
             if limit:
                 sql += " LIMIT ?"
@@ -142,13 +150,17 @@ class FacilityRepository:
 
     @staticmethod
     def count_all(facility_type: Optional[str] = None) -> int:
-        """Menghitung total fasilitas di database."""
+        """Number of public facilities."""
+        if not _is_public(facility_type):
+            return 0
         conn = get_db_connection()
         try:
+            sql = f"SELECT COUNT(*) FROM facilities WHERE facility_type IN ({_TYPE_PLACEHOLDERS})"
+            params: List[Any] = list(PUBLIC_FACILITY_TYPES)
             if facility_type:
-                cursor = conn.execute("SELECT COUNT(*) FROM facilities WHERE facility_type = ?", (facility_type,))
-            else:
-                cursor = conn.execute("SELECT COUNT(*) FROM facilities")
+                sql += " AND facility_type = ?"
+                params.append(facility_type)
+            cursor = conn.execute(sql, params)
             return cursor.fetchone()[0]
         finally:
             conn.close()

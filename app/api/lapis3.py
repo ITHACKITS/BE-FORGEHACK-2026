@@ -126,7 +126,7 @@ def get_sources_catalog() -> Dict[str, Any]:
         {
             "id": "D18",
             "name": "OpenStreetMap / Overpass API",
-            "type": "Public facilities (schools, hospitals, airports)",
+            "type": "Public facilities (airports)",
             "url": "https://overpass-api.de/",
             "license": "ODbL 1.0",
             "status": "S",
@@ -268,7 +268,7 @@ def export_run_summary(run_id: str, format: str = Query("json", enum=["json", "h
 def get_run_emergency_advisory(run_id: str) -> Dict[str, Any]:
     """
     Multi-sector emergency advisory: affected districts (kecamatan), protective
-    equipment guidance (Kemenkes), school safety (SPAB) and health facilities.
+    equipment guidance (Kemenkes) and aviation.
     """
     data = _get_run_data(run_id)
     grid_meta = data["grid"]
@@ -285,7 +285,7 @@ def get_run_emergency_advisory(run_id: str) -> Dict[str, Any]:
     )
     impact_data = data.get("impact") or calculate_impact_ranges(data, grid)
     facilities_data = data.get("facilities_impacted") or {}
-    if not facilities_data or not facilities_data.get("schools"):
+    if not facilities_data:
         try:
             from app.api.simulate import RUNS_CACHE
             cache_data = RUNS_CACHE.get(run_id)
@@ -302,12 +302,12 @@ def get_run_emergency_advisory(run_id: str) -> Dict[str, Any]:
 @router.get("/runs/{run_id}/evacuation-route")
 def get_evacuation_corridor_route(
     run_id: str,
-    from_lat: float = Query(..., description="Origin latitude (school or command post)"),
+    from_lat: float = Query(..., description="Origin latitude (home or command post)"),
     from_lon: float = Query(..., description="Origin longitude"),
-    to_lat: float = Query(..., description="Destination latitude (safe referral hospital)"),
+    to_lat: float = Query(..., description="Destination latitude (safe shelter)"),
     to_lon: float = Query(..., description="Destination longitude"),
     from_name: str = Query("Evacuation point", description="Origin name"),
-    to_name: str = Query("Safe referral hospital", description="Destination hospital name"),
+    to_name: str = Query("Safe shelter", description="Destination name"),
 ) -> Dict[str, Any]:
     """
     Real road route with the least hazard exposure (safe evacuation corridor)

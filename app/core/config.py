@@ -29,6 +29,10 @@ DOCS_DIR = BACKEND_DIR / "docs"
 # Make sure the run output folder exists
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
 
+# Facility types the API serves. Schools and healthcare rows stay in SQLite but are no
+# longer part of the product (team decision 2026-10-10), so every read path filters on this.
+PUBLIC_FACILITY_TYPES: tuple[str, ...] = ("airport",)
+
 
 def _split_csv(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
