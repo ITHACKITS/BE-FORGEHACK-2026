@@ -83,6 +83,8 @@ flowchart LR
   - regenerate `docs/fixtures/` (5 files still carry the old name or Indonesian text);
   - `scripts/github/*` (10 files) automate another project's GitHub board and aren't used by StandbAI: delete or leave (team decision).
 
+- **2026-10-10 21:35 WIB, branch `feat/ai-brief`:** `GET /advice/nearby?lat&lon&lang` (`app/services/advice.py`, tag `analysis`). Facts from our data: volcanoes within 300 km, FIRMS detections within 10/25/50 km, the nearest fire-prone forest, and the closest pass of the 72 h smoke paths (fire clusters) and ash paths (Level III+ volcanoes within 200 km). A fixed rule picks the scenario (`ash_threat`, `smoke_threat`, `prevention`, `clear`). The AI service then writes the brief (`/api/v1/brief`) while its RandomForest scores the 20 nearest detections, in parallel. No LLM key in the backend. 54 tests pass.
+
 ## 7. Conventions
 - **Times:** UTC ISO 8601.
 - **API JSON:** snake_case. New responses carry `generated_at`, `source`, `is_example`.
