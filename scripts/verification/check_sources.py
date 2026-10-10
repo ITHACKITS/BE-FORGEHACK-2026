@@ -1,7 +1,7 @@
 """
 scripts/check_sources.py
 
-Verifikasi sumber data nyata untuk UdaraSiaga (Tahap 0).
+Verifikasi sumber data nyata untuk Standbai (Tahap 0).
 Memanggil endpoint nyata, memeriksa nama variabel, model, batas, dan struktur dokumen.
 Menuliskan hasil ke docs/SOURCES.md.
 Nol kunci API yang dicetak di output atau file dokumentasi.
@@ -20,8 +20,8 @@ DOCS_DIR = BACKEND_DIR / "docs"
 DOCS_DIR.mkdir(parents=True, exist_ok=True)
 SOURCES_MD = DOCS_DIR / "SOURCES.md"
 
-IS_OFFLINE = os.environ.get("UDARASIAGA_OFFLINE") == "1"
-USER_AGENT = "UdaraSiaga-SourceChecker/1.0 (JOINTS2026 UGM Hackathon; contact@udarasiaga.id)"
+IS_OFFLINE = os.environ.get("STANDBAI_OFFLINE") == "1"
+USER_AGENT = "Standbai/1.0 (+https://github.com/ITHACKITS/BE-FORGEHACK-2026)"
 
 # Load .env manual jika ada tanpa mengekspos
 ENV_FILE = BACKEND_DIR / ".env"
@@ -363,7 +363,7 @@ def check_worldpop(client: httpx.Client) -> dict:
 
 
 def run_checks():
-    log("=== Memulai Pemeriksaan Sumber Data UdaraSiaga (Tahap 0) ===")
+    log("=== Memulai Pemeriksaan Sumber Data Standbai (Tahap 0) ===")
     results = []
 
     # D24 selalu bisa diverifikasi secara matematis & literatur
@@ -371,7 +371,7 @@ def run_checks():
     results.append(d24_res)
 
     if IS_OFFLINE:
-        log("UDARASIAGA_OFFLINE=1 aktif. Pemeriksaan jaringan dilewati.")
+        log("STANDBAI_OFFLINE=1 aktif. Pemeriksaan jaringan dilewati.")
         for d_id, url in [
             ("D01, D02, D03, D28", "https://ensemble-api.open-meteo.com/v1/ensemble"),
             ("D05", "https://magma.esdm.go.id"),
@@ -386,7 +386,7 @@ def run_checks():
                 "url": url,
                 "status": "B",
                 "checked_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "notes": ["Pemeriksaan jaringan dilewati karena UDARASIAGA_OFFLINE=1."],
+                "notes": ["Pemeriksaan jaringan dilewati karena STANDBAI_OFFLINE=1."],
             })
     else:
         with httpx.Client(timeout=15.0, headers={"User-Agent": USER_AGENT}) as client:
@@ -407,7 +407,7 @@ def run_checks():
 def generate_sources_md(results: list):
     now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    content = f"""# UdaraSiaga: Laporan Verifikasi Sumber Data (SOURCES.md)
+    content = f"""# Standbai: Laporan Verifikasi Sumber Data (SOURCES.md)
 
 Diperbarui otomatis oleh `scripts/check_sources.py` pada **{now_utc}**.
 Aturan referensi: Temuan hasil `scripts/check_sources.py` di file ini **menang atas `SPEC.md`**, dan `SPEC.md` menang atas ingatan agent.

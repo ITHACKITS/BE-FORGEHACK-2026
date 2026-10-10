@@ -1,7 +1,7 @@
 """
 app/api/layers.py
 
-Router untuk lapisan peta pendukung (hotspots, facilities, coastline offline fallback).
+Supporting map layers (hotspots, facilities, coastline with an offline fallback).
 """
 
 from typing import Optional
@@ -18,16 +18,16 @@ router = APIRouter(tags=["layers"])
 def get_layer(
     name: str,
     bbox: Optional[str] = Query(None, description="west,south,east,north"),
-    event_id: Optional[str] = Query("live_kalimantan", description="ID event untuk data titik api"),
-    limit: Optional[int] = Query(None, description="Batas jumlah fitur"),
-    zoom: Optional[int] = Query(None, description="Level zoom peta untuk LOD"),
-    facility_type: Optional[str] = Query(None, description="Filter jenis fasilitas (school, healthcare, airport)")
+    event_id: Optional[str] = Query("live_kalimantan", description="Event ID for hotspot data"),
+    limit: Optional[int] = Query(None, description="Maximum number of features"),
+    zoom: Optional[int] = Query(None, description="Map zoom level for level of detail"),
+    facility_type: Optional[str] = Query(None, description="Facility type filter (airport)")
 ):
     if bbox:
         parts = [float(p.strip()) for p in bbox.split(",")]
         w, s, e, n = parts[0], parts[1], parts[2], parts[3]
     else:
-        # Cakupan Penuh Wilayah Kedaulatan Republik Indonesia (Sabang s.d. Merauke: 94° - 142° BT)
+        # Full extent of Indonesia (Sabang to Merauke: 94°E to 142°E)
         w, s, e, n = 94.0, -12.0, 142.0, 7.0
 
     if name in ["facilities", "facilities-national"]:
@@ -119,7 +119,7 @@ def get_layer(
             except Exception:
                 pass
 
-        # Fallback garis pantai sederhana Selat Sunda
+        # Simple Sunda Strait coastline fallback
         sunda_coast = [
             [[105.8, -6.0], [105.9, -6.3], [105.8, -6.5], [105.5, -6.8], [105.2, -6.9]],
             [[105.2, -5.4], [105.5, -5.6], [105.7, -5.8], [105.8, -5.9]]
@@ -182,7 +182,7 @@ def get_layer(
         if forest_path.exists():
             with open(forest_path, "r", encoding="utf-8-sig") as f:
                 forests_data = json.load(f)
-            # Sinkronkan n_hotspots: prioritaskan jumlah hotspot spasial, perbarui jika CSV lokal ada
+            # Sync n_hotspots: keep the spatial count, raise it if a local CSV has more
             for item in forests_data:
                 ev_id = item.get("id")
                 if ev_id:
@@ -249,10 +249,13 @@ def get_layer(
                     },
                     "wildfire_hotspots": {
                         "active_24h_firms": n_hotspots,
+                        # Additive: the count above is all stored detections, not the last 24 h
+                        "latest_detection_date": max((str(h.get("acq_date") or "") for h in hotspots), default="") or None,
+                        "count_note": "All stored detections up to latest_detection_date, not a live 24-hour count.",
                         "high_confidence_pct": high_pct,
                         "peat_clusters": 8
                     },
-                    "system_status": "SIAGA BENCANA ATMOSFER (24/7)",
+                    "system_status": "Atmospheric hazard monitoring (24/7)",
                     "last_sync_utc": now_iso
                 }
         except Exception:
@@ -296,15 +299,17 @@ def get_layer(
             },
             "wildfire_hotspots": {
                 "active_24h_firms": n_hotspots,
+                "latest_detection_date": max((str(h.get("acq_date") or "") for h in hotspots), default="") or None,
+                "count_note": "All stored detections up to latest_detection_date, not a live 24-hour count.",
                 "high_confidence_pct": high_pct,
                 "peat_clusters": 8
             },
-            "system_status": "SIAGA BENCANA ATMOSFER (24/7)",
+            "system_status": "Atmospheric hazard monitoring (24/7)",
             "last_sync_utc": now_iso
         }
 
     else:
-        raise HTTPException(status_code=404, detail=f"Layer '{name}' tidak dikenali. Pilih: facilities, hotspots, coastline, volcanoes-national, summary-kpi.")
+        raise HTTPException(status_code=404, detail=f"Unknown layer '{name}'. Choose one of: facilities, hotspots, coastline, volcanoes-national, forests, forest-boundaries, summary-kpi.")
 
 
 @router.post("/layers/sync-live")
@@ -335,5 +340,5 @@ def trigger_live_sync():
             "open_meteo_ensemble": {"status": openmeteo_status, "latency_ms": latency_ms, "members": 51},
             "pvmbg_magma_indonesia": {"status": "active_monitored", "active_volcanoes": len(volcanoes)}
         },
-        "message": f"Telemetri multi-bahaya nasional tersinkronisasi secara real-time (latensi API: {latency_ms} ms, {len(hotspots)} titik api aktif, {len(volcanoes)} gunung api terdata)."
+        "message": f"National hazard sources synchronised (API latency: {latency_ms} ms, {len(hotspots)} active hotspots, {len(volcanoes)} volcanoes listed)."
     }

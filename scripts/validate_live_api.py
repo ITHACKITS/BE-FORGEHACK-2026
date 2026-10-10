@@ -1,7 +1,7 @@
 """
 validate_live_api.py
 
-Uji Validasi Komprehensif Fungsionalitas Backend UdaraSiaga secara Live (End-to-End).
+Uji Validasi Komprehensif Fungsionalitas Backend Standbai secara Live (End-to-End).
 Memeriksa seluruh endpoint, kalkulasi sains, kasus khusus (custom click, katalog 36 hutan, 70 gunung),
 dan penanganan galat HTTP (422, 404, 400).
 """
@@ -54,13 +54,13 @@ def post(path: str, payload: dict, expected_status: int = 200):
 
 def run_all_validations():
     print("=" * 70)
-    print("🚀 MEMULAI VALIDASI KOMPREHENSIF LIVE BACKEND UDARASIAGA (38+ CHECKS)")
+    print("🚀 MEMULAI VALIDASI KOMPREHENSIF LIVE BACKEND STANDBAI (38+ CHECKS)")
     print("=" * 70)
     passed_count = 0
 
     # 1. Root & Health
     r_root = get("/")
-    assert r_root["project"] == "UdaraSiaga", "Root metadata mismatch"
+    assert r_root["project"] == "Standbai", "Root metadata mismatch"
     print(" [1/38] GET /: OK")
     passed_count += 1
 

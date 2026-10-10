@@ -17,6 +17,8 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict
 
+from app.core.offline import is_offline
+
 
 def get_gemini_api_key() -> str:
     """Mengambil kunci API Gemini dari environment atau file .env."""
@@ -37,8 +39,6 @@ def enrich_advisory_with_gemini(
     scenario_label: str,
     districts: list,
     population_summary: Dict[str, Any],
-    school_count: int,
-    healthcare_count: int,
 ) -> Dict[str, Any]:
     """
     Memanggil Google Gemini API untuk menghasilkan narasi siaran pers dan broadcast warga.
@@ -61,14 +61,13 @@ DATA TELEMETRI DAN SITUASI AKTUAL:
 - Skenario Operasional: {scenario_label}
 - Wilayah Prioritas Pengawasan: {districts_str}
 - Estimasi Penduduk Terpapar: {total_pop:,.0f} jiwa (Kelompok Rentan: {children:,.0f} anak-anak <15 th, {elderly:,.0f} lansia >=65 th)
-- Infrastruktur Kritis di Koridor Risiko: {school_count} sekolah, {healthcare_count} fasilitas kesehatan
 
 PEDOMAN FORMAT DAN GAYA BAHASA (WAJIB DIPATUHI):
 1. GAYA BAHASA: Sangat resmi, profesional, tegas, berwibawa, dan berbasis data ilmiah kebencanaan (gaya bahasa resmi Pusdalops BNPB).
 2. DILARANG KERAS MENGGUNAKAN EMOJI APAPUN. DILARANG menggunakan bahasa santai atau kasual.
 3. KONTEN SIARAN PERS (press_release_body):
    - Paragraf 1: Pengumuman situasi kedaruratan resmi, nama kejadian dan lokasinya, arah pergerakan trajektori atmosferik, dan rincian kuantitatif warga rentan terpapar.
-   - Paragraf 2: Instruksi taktis multi-sektor: pengalihan KBM sekolah ke PJJ Daring (mandat SPAB Kemendikbud-BNPB), kesiapsiagaan ruang isolasi udara bersih di puskesmas/RSUD, serta pengamanan sumber air minum.
+   - Paragraf 2: Instruksi persiapan rumah tangga: respirator N95, persediaan air minum dan obat rutin, serta pengamanan sumber air minum.
 4. KONTEN BROADCAST WARGA (whatsapp_broadcast):
    - Format surat edaran / buletin telegram darurat resmi berstruktur (Nomor, Perihal, Wilayah, Poin Instruksi 1-5, Kontak Darurat).
    - Tanpa emoji sama sekali. Gunakan penomoran rapi (1., 2., 3.).
@@ -86,8 +85,7 @@ Kembalikan HANYA format JSON valid tanpa tanda pembungkus markdown (```json):
 }}
 """
 
-    is_offline = os.getenv("UDARASIAGA_OFFLINE") == "1"
-    if api_key and not is_offline:
+    if api_key and not is_offline():
         models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
         for model in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
@@ -125,29 +123,11 @@ Kembalikan HANYA format JSON valid tanpa tanda pembungkus markdown (```json):
                 continue
 
     # Fallback Deterministik Cerdas (Standar Resmi Pusdalops BNPB / Kemenkes RI)
-    if school_count > 0:
-        school_action_text = (
-            f"Menindaklanjuti potensi bahaya tersebut, sebanyak {school_count} satuan pendidikan di wilayah koridor terdampak "
-            f"diinstruksikan segera mengalihkan kegiatan belajar mengajar ke Pembelajaran Jarak Jauh (PJJ Daring) sesuai kerangka SPAB Kemendikbud-BNPB. "
-        )
-        wa_school_point = f"5. Perlindungan Siswa Sekolah: Sebanyak {school_count} satuan pendidikan di zona terdampak dialihkan ke Pembelajaran Jarak Jauh (PJJ Daring). Siswa diimbau tetap berada di dalam ruangan tertutup."
-    else:
-        school_action_text = (
-            "Seluruh satuan pendidikan di wilayah koridor penyangga diimbau meningkatkan kewaspadaan, membatasi kegiatan luar ruang, "
-            "dan bersiap mengalihkan kegiatan ke PJJ Daring jika terjadi eskalasi sebaran partikel. "
-        )
-        wa_school_point = "5. Kesiapsiagaan Satuan Pendidikan: Sekolah di wilayah penyangga diimbau meniadakan aktivitas luar ruang (olahraga/upacara) dan memantau perkembangan arah angin."
-
-    if healthcare_count > 0:
-        health_action_text = (
-            f"Fasilitas pelayanan kesehatan ({healthcare_count} faskes) disiagakan dengan Ruang Udara Bersih dan pasokan oksigen medis "
-            f"guna mengantisipasi lonjakan kasus sindrom pernapasan akut."
-        )
-    else:
-        health_action_text = (
-            "Fasilitas pelayanan kesehatan di wilayah terdekat disiagakan dengan Ruang Udara Bersih dan pasokan oksigen medis "
-            "untuk mengantisipasi potensi lonjakan keluhan pernapasan warga kelompok rentan."
-        )
+    household_action_text = (
+        "Warga di wilayah koridor terdampak diimbau menyiapkan respirator N95, persediaan air minum, dan obat rutin "
+        "sebelum partikel tiba, serta membatasi aktivitas luar ruang bagi anak-anak, lansia, dan penderita gangguan pernapasan."
+    )
+    wa_household_point = "5. Persiapan Rumah Tangga: Siapkan air minum, obat rutin, dan respirator untuk setiap anggota keluarga. Anak-anak, lansia, dan penderita asma diimbau tetap berada di dalam ruangan tertutup."
 
     default_pr_title = f"SIARAN PERS PUSDALOPS BPBD: PERINGATAN DINI KESIAPSIAGAAN ANCAMAN {hazard_label.upper()} ({scenario_label})"
     default_pr_body = (
@@ -156,7 +136,7 @@ Kembalikan HANYA format JSON valid tanpa tanda pembungkus markdown (```json):
         f"Berdasarkan hasil pemodelan dispersi partikulat atmosferik, sebaran partikel terdeteksi mengarah ke koridor "
         f"{districts_str} dengan estimasi populasi berisiko terpapar mencapai {total_pop:,.0f} jiwa, yang mencakup {children:,.0f} anak-anak "
         f"dan {elderly:,.0f} lansia berisiko tinggi.\n\n"
-        f"{school_action_text}{health_action_text}"
+        f"{household_action_text}"
     )
     default_wa = (
         f"PEMBERITAHUAN RESMI PUSDALOPS BPBD & DINAS KESEHATAN\n"
@@ -169,14 +149,14 @@ Kembalikan HANYA format JSON valid tanpa tanda pembungkus markdown (```json):
         f"2. Perlindungan Mata: Dilarang keras memakai lensa kontak (softlens). Debu abu silika (SiO2) bersifat tajam dan abrasif yang dapat merobek kornea mata (abrasi kornea) dan memicu kebutaan permanen. Gunakan kacamata pelindung tertutup (Safety Goggles).\n"
         f"3. Sanitasi Sumber Air Minum: Tutup rapat seluruh tandon air minum, penampungan, dan sumur gali keluarga menggunakan terpal kedap guna menghindari kontaminasi senyawa asam sulfur dan racun fluorida.\n"
         f"4. Isolasi Ruang Tinggal: Tutup ventilasi rumah dan pasang kain basah pada celah pintu/jendela. Jangan menyapu abu dalam kondisi kering karena akan memicu resuspensi partikel ke udara pernapasan; gunakan semprotan air halus dan pel basah.\n"
-        f"{wa_school_point}\n\n"
+        f"{wa_household_point}\n\n"
         f"Pusat Bantuan & Komando Darurat:\n"
         f"- Layanan Gawat Darurat Medis: SPGDT 119\n"
         f"- Posko Terpadu Pusdalops BPBD: Call Center 112"
     )
 
     return {
-        "engine": "UdaraSiaga Deterministic Expert AI Synthesizer (Standard BNPB/Kemenkes)",
+        "engine": "Standbai deterministic advisory (BNPB/Kemenkes guidance)",
         "status": "expert_fallback",
         "press_release_title": default_pr_title,
         "press_release_body": default_pr_body,

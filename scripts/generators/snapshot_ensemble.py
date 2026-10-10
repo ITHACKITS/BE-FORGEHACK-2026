@@ -4,7 +4,7 @@ scripts/snapshot_ensemble.py
 Mengambil snapshot anggota ensemble cuaca dari Open-Meteo Ensemble API.
 Menyimpan ke data/events/{event_id}/weather_ensemble.json.
 Dijalankan secara berkala (mis. tiap 6 jam) untuk event berjalan sebelum data anggota terhapus (retensi 3 hari).
-Menghormati UDARASIAGA_OFFLINE=1.
+Menghormati STANDBAI_OFFLINE=1.
 """
 
 import argparse
@@ -18,7 +18,7 @@ import httpx
 SCRIPT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 EVENTS_DIR = BACKEND_DIR / "data" / "events"
-USER_AGENT = "UdaraSiaga-EnsembleSnapshot/1.0 (JOINTS2026 UGM Hackathon)"
+USER_AGENT = "Standbai/1.0 (+https://github.com/ITHACKITS/BE-FORGEHACK-2026)"
 
 PRESSURE_LEVELS = ["1000hPa", "850hPa", "700hPa", "500hPa", "250hPa", "100hPa", "50hPa"]
 SURFACE_VARS = ["wind_speed_10m", "wind_direction_10m", "wind_speed_80m", "wind_speed_100m", "wind_speed_120m", "precipitation"]
@@ -50,11 +50,11 @@ def fetch_ensemble_snapshot(
     target_dir.mkdir(parents=True, exist_ok=True)
     out_file = target_dir / "weather_ensemble.json"
 
-    is_offline = os.environ.get("UDARASIAGA_OFFLINE") == "1"
+    is_offline = os.environ.get("STANDBAI_OFFLINE") == "1"
     now_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
     if is_offline:
-        print("[OFFLINE] UDARASIAGA_OFFLINE=1 aktif. Snapshot dilewati atau memakai data tersimpan.")
+        print("[OFFLINE] STANDBAI_OFFLINE=1 aktif. Snapshot dilewati atau memakai data tersimpan.")
         if out_file.exists():
             print(f"[OFFLINE] Memuat data cache yang ada di {out_file}")
             return json.loads(out_file.read_text(encoding="utf-8"))

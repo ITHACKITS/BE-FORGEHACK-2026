@@ -1,198 +1,82 @@
-# Arsitektur Basis Data Spasial Terpadu (UdaraSiaga Database Architecture)
+# StandbAI Spatial Database Architecture
 
-Dokumen ini memuat spesifikasi teknis, skema relasional, indeks spasial R*Tree, dan pola akses data (*Repository Pattern*) untuk sistem informasi geografis dan simulator sebaran atmosfer UdaraSiaga.
+> **Superseded by [`../ERD.md`](../ERD.md).** `ERD.md` is the maintained data model: current tables, verified row counts, and planned tables. This document keeps the design rationale and the query flow. Counts below were corrected to the values read from the database on 2026-10-10.
+
+This document covers the technical specification, relational schema, R*Tree spatial indexes and data-access (repository) pattern for the StandbAI geographic information system and atmospheric dispersion simulator.
 
 ---
 
-## 1. Ringkasan Eksekutif & Rasional Desain
+## 1. Summary and design rationale
 
-Sistem UdaraSiaga mengintegrasikan data multi-bahaya berskala nasional yang mencakup seluruh 38 provinsi di Indonesia. Untuk memenuhi persyaratan performa tinggi tanpa latensi pada antarmuka peta taktis, arsitektur basis data bertransformasi dari berkas JSON datar (*flat files*) menjadi basis data relasional terindeks secara spasial (*Spatial Database*).
+StandbAI integrates multi-hazard data at national scale across Indonesia's 38 provinces. To serve the interactive map without lag, the data layer moved from flat JSON files to a spatially indexed relational database.
 
-### Perbandingan Karakteristik Arsitektur
-
-| Parameter Evaluasi | Berkas JSON Datar (Legacy) | SQLite + R*Tree Spasial (Terpilih) | PostgreSQL + PostGIS (Server Eksternal) |
+| Criterion | Flat JSON files (legacy) | SQLite + R*Tree (chosen) | PostgreSQL + PostGIS (external server) |
 | :--- | :--- | :--- | :--- |
-| **Metode Pencarian Spasial** | Pemindaian linier O(N) di memori | Kueri Pohon Spasial R*Tree O(log N) | Indeks GiST / R*Tree O(log N) |
-| **Latensi Kueri Bounding Box** | > 150 milidetik | < 1 milidetik | 2 - 5 milidetik (overhead TCP/IP) |
-| **Konsumsi Memori RAM Klien** | Seluruh data dimuat ke RAM browser | Hanya memuat poligon dalam layar pengguna | Hanya memuat poligon dalam layar pengguna |
-| **Kemandirian Operasional** | Portabel | Portabel, nir-konfigurasi, nir-daemon | Membutuhkan servis eksternal & otentikasi |
-| **Kepatuhan Protokol Offline** | Memenuhi | Memenuhi 100% (UDARASIAGA_OFFLINE=1) | Rentan gagal bila koneksi lokal terputus |
+| **Spatial search method** | Linear scan in memory, O(N) | R*Tree spatial query, O(log N) | GiST / R-tree index, O(log N) |
+| **Bounding-box query latency** | > 150 ms | < 1 ms | 2–5 ms (TCP/IP overhead) |
+| **Client RAM use** | All data loaded into the browser | Only features in the user's viewport | Only features in the user's viewport |
+| **Operational independence** | Portable | Portable, zero configuration, no daemon | Needs an external service and authentication |
+| **Offline mode** | Works | Works fully (`STANDBAI_OFFLINE=1`) | Fails if the local connection drops |
 
-Pilihan arsitektur jatuh pada **SQLite dengan modul indeks spasial virtual R\*Tree bawaan C**. Pilihan ini memberikan kecepatan pembacaan memori terpetakan (*memory-mapped I/O*), keandalan transaksi ACID, dan kemandirian eksekusi penuh tanpa dependensi servis eksternal.
-
----
-
-## 2. Diagram Entitas Relasional (Entity Relationship Diagram)
-
-```mermaid
-erDiagram
-    VOLCANOES ||--o{ EVENTS : "diasosiasikan dengan"
-    FORESTS ||--o{ EVENTS : "diasosiasikan dengan"
-    EVENTS ||--o{ SIMULATION_RUNS : "menghasilkan"
-    
-    VOLCANOES ||--|| VOLCANOES_RTREE : "diindeks oleh"
-    FORESTS ||--|| FORESTS_RTREE : "diindeks oleh"
-    FACILITIES ||--|| FACILITIES_RTREE : "diindeks oleh"
-    HOTSPOTS ||--|| HOTSPOTS_RTREE : "diindeks oleh"
-
-    VOLCANOES {
-        string id PK
-        string name
-        string province
-        string region
-        float elevation_m
-        int level
-        string level_name
-        string color
-        float radius_bahaya_km
-        string last_vona
-        float latitude
-        float longitude
-        boolean has_event
-        string event_id
-        text metadata_json
-    }
-
-    FORESTS {
-        string id PK
-        string name
-        string forest_type
-        string province
-        string region
-        float latitude
-        float longitude
-        float area_ha
-        string risk_level
-        int n_hotspots
-        text description
-        text geometry_geojson
-    }
-
-    FACILITIES {
-        string facility_id PK
-        string name
-        string facility_type
-        float latitude
-        float longitude
-        string district
-        string province
-        text metadata_json
-    }
-
-    HOTSPOTS {
-        int id PK
-        string event_id
-        float latitude
-        float longitude
-        float brightness
-        string confidence
-        float frp
-        string acq_date
-    }
-
-    EVENTS {
-        string event_id PK
-        string name
-        string hazard_type
-        string target_id
-        string status
-        float latitude
-        float longitude
-        text metadata_json
-    }
-
-    SIMULATION_RUNS {
-        string run_id PK
-        string event_id
-        string hazard_type
-        string created_at
-        string scenario_label
-        string status
-        text results_json
-    }
-
-    FACILITIES_RTREE {
-        int id PK
-        float minX
-        float maxX
-        float minY
-        float maxY
-    }
-
-    VOLCANOES_RTREE {
-        int id PK
-        float minX
-        float maxX
-        float minY
-        float maxY
-    }
-
-    FORESTS_RTREE {
-        int id PK
-        float minX
-        float maxX
-        float minY
-        float maxY
-    }
-
-    HOTSPOTS_RTREE {
-        int id PK
-        float minX
-        float maxX
-        float minY
-        float maxY
-    }
-```
+**Choice:** SQLite with its built-in C **R\*Tree virtual table module**. It gives fast memory-mapped reads, ACID transactions and fully self-contained execution with no external service.
 
 ---
 
-## 3. Alur Kueri Spasial Viewport & Hirarki Level-of-Detail (LOD)
+## 2. Entity-relationship diagram
 
-Ketika pengguna berinteraksi dengan peta interaktif (menggeser atau memperbesar tampilan), sistem tidak pernah meminta seluruh fasilitas secara serentak. Kueri dieksekusi secara dinamis dengan siklus berikut:
+See [`../ERD.md`](../ERD.md) §1 for the maintained diagram. In short:
+- **Base tables:** `volcanoes`, `forests`, `facilities` and `hotspots`, each indexed by an R*Tree virtual table.
+- **Catalogue tables:** `events` and `simulation_runs`, unused today because events and runs live in files.
+
+---
+
+## 3. Viewport spatial query flow and level of detail (LOD)
+
+When a user pans or zooms the interactive map, the system never requests every facility at once. Queries run dynamically:
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Pengguna as Klien Peramban (Leaflet UI)
-    participant API as FastAPI Router (/layers/facilities)
+    actor User as Browser client (Leaflet UI)
+    participant API as FastAPI router (/layers/facilities)
     participant Repo as FacilityRepository
-    participant DB as SQLite Engine (udarasiaga.db)
-    participant RTree as Virtual Table (facilities_rtree)
+    participant DB as SQLite engine (standbai.db)
+    participant RTree as Virtual table (facilities_rtree)
 
-    Pengguna->>API: GET /layers/facilities?bbox=W,S,E,N&zoom=Z&limit=250
-    Note over Pengguna,API: Koordinat layar aktual + Level Zoom peta
+    User->>API: GET /layers/facilities?bbox=W,S,E,N&zoom=Z&limit=250
+    Note over User,API: Current screen bounds + map zoom level
     API->>Repo: get_by_bbox(lat_min, lat_max, lon_min, lon_max, zoom, limit)
-    
-    alt Zoom < 8 (Skala Nasional / Pulau)
-        Repo->>DB: Filter tipe bandara & rumah sakit rujukan utama
-    else Zoom 8 - 10 (Skala Provinsi / Wilayah)
-        Repo->>DB: Filter bandara, rumah sakit, SMA/SMK evakuasi
-    else Zoom >= 11 (Skala Kabupaten / Kecamatan)
-        Repo->>DB: Muat seluruh sekolah (SD, SMP, SMA) dan fasilitas kesehatan
+
+    alt Zoom < 8 (national / island scale)
+        Repo->>DB: Filter airports and main referral hospitals
+    else Zoom 8-10 (province / region scale)
+        Repo->>DB: Filter airports, hospitals, evacuation high schools
+    else Zoom >= 11 (district / sub-district scale)
+        Repo->>DB: Load all schools and health facilities
     end
 
-    Repo->>RTree: Cari irisan kotak batas (minX <= E AND maxX >= W AND minY <= N AND maxY >= S)
-    RTree-->>DB: Kembalikan rowid terpilih (O(log N))
-    DB-->>Repo: Hasil baris fasilitas (rata-rata 30 - 200 rekaman)
-    Repo-->>API: List[Dict] atribut lengkap
-    API-->>Pengguna: GeoJSON FeatureCollection (RFC 7946)
-    Note over Pengguna: Render kanvas 60 FPS tanpa beban memori DOM
+    Repo->>RTree: Box intersection (minX <= E AND maxX >= W AND minY <= N AND maxY >= S)
+    RTree-->>DB: Return selected rowids (O(log N))
+    DB-->>Repo: Facility rows (typically 30-200 records)
+    Repo-->>API: List[Dict] with full attributes
+    API-->>User: GeoJSON FeatureCollection (RFC 7946)
+    Note over User: Canvas renders smoothly without DOM memory pressure
 ```
 
 ---
 
-## 4. Definisi Skema Relasional & Tabel Spasial (DDL)
+## 4. Relational schema and spatial tables (DDL)
 
-Koneksi basis data dikonfigurasi menggunakan mode produksi:
-* **WAL Mode**: `PRAGMA journal_mode = WAL;` (memungkinkan pembacaan non-blocking selama operasi penulisan).
-* **Sinkronisasi Normal**: `PRAGMA synchronous = NORMAL;`.
-* **Alokasi Cache**: `PRAGMA cache_size = -64000;` (alokasi memori halaman 64 megabita).
-* **Integritas Relasi**: `PRAGMA foreign_keys = ON;`.
+The connection uses production settings:
+- **WAL mode:** `PRAGMA journal_mode = WAL;` (non-blocking reads during writes).
+- **Normal sync:** `PRAGMA synchronous = NORMAL;`.
+- **Cache:** `PRAGMA cache_size = -64000;` (64 MB page cache).
+- **Relational integrity:** `PRAGMA foreign_keys = ON;` (no foreign keys are declared yet; see `ERD.md`).
 
-### Skema Tabel Utama
+### Main tables
 
 ```sql
--- Tabel Katalog 70 Gunung Api Nasional
+-- National catalogue of 70 volcanoes
 CREATE TABLE IF NOT EXISTS volcanoes (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -202,7 +86,7 @@ CREATE TABLE IF NOT EXISTS volcanoes (
     level INTEGER DEFAULT 1,
     level_name TEXT,
     color TEXT,
-    radius_bahaya_km REAL DEFAULT 3.0,
+    radius_bahaya_km REAL DEFAULT 3.0,   -- hazard radius; English alias hazard_radius_km planned
     last_vona TEXT,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
@@ -211,7 +95,7 @@ CREATE TABLE IF NOT EXISTS volcanoes (
     metadata_json TEXT
 );
 
--- Tabel 36 Kawasan Hutan & Lahan Gambut
+-- 36 forest and peatland areas
 CREATE TABLE IF NOT EXISTS forests (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -227,7 +111,7 @@ CREATE TABLE IF NOT EXISTS forests (
     geometry_geojson TEXT
 );
 
--- Tabel Fasilitas Publik Nasional (Sekolah, Faskes, Bandara)
+-- National public facilities (schools, health facilities, airports)
 CREATE TABLE IF NOT EXISTS facilities (
     facility_id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -239,7 +123,7 @@ CREATE TABLE IF NOT EXISTS facilities (
     metadata_json TEXT
 );
 
--- Tabel Titik Api Satelit NASA FIRMS
+-- NASA FIRMS satellite fire hotspots
 CREATE TABLE IF NOT EXISTS hotspots (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     event_id TEXT NOT NULL,
@@ -252,47 +136,39 @@ CREATE TABLE IF NOT EXISTS hotspots (
 );
 ```
 
-### Skema Tabel Virtual R\*Tree Spasial
+### R\*Tree spatial virtual tables
 
-Modul R\*Tree SQLite mengindeks koordinat dua dimensi dalam format batas minimum dan maksimum:
+The SQLite R*Tree module indexes two-dimensional coordinates as minimum and maximum bounds:
 
 ```sql
 CREATE VIRTUAL TABLE IF NOT EXISTS facilities_rtree USING rtree(
-    id,          -- Mereferensikan facilities.rowid
-    minX, maxX,  -- Bujur Timur (Longitude)
-    minY, maxY   -- Lintang Selatan/Utara (Latitude)
+    id,          -- references facilities.rowid
+    minX, maxX,  -- longitude
+    minY, maxY   -- latitude
 );
 
-CREATE VIRTUAL TABLE IF NOT EXISTS volcanoes_rtree USING rtree(
-    id, minX, maxX, minY, maxY
-);
-
-CREATE VIRTUAL TABLE IF NOT EXISTS forests_rtree USING rtree(
-    id, minX, maxX, minY, maxY
-);
-
-CREATE VIRTUAL TABLE IF NOT EXISTS hotspots_rtree USING rtree(
-    id, minX, maxX, minY, maxY
-);
+CREATE VIRTUAL TABLE IF NOT EXISTS volcanoes_rtree USING rtree(id, minX, maxX, minY, maxY);
+CREATE VIRTUAL TABLE IF NOT EXISTS forests_rtree   USING rtree(id, minX, maxX, minY, maxY);
+CREATE VIRTUAL TABLE IF NOT EXISTS hotspots_rtree  USING rtree(id, minX, maxX, minY, maxY);
 ```
 
-### Pemicu Sinkronisasi Otomatis (Triggers)
+### Synchronisation triggers
 
-Untuk menjamin konsistensi data antara tabel relasional dan tabel virtual R\*Tree tanpa intervensi manual aplikasi:
+Triggers keep the base tables and their R*Tree indexes consistent without application code:
 
 ```sql
--- Pemicu Penambahan Fasilitas
+-- Facility insert
 CREATE TRIGGER trg_facilities_insert AFTER INSERT ON facilities BEGIN
     INSERT INTO facilities_rtree(id, minX, maxX, minY, maxY)
     VALUES (new.rowid, new.longitude, new.longitude, new.latitude, new.latitude);
 END;
 
--- Pemicu Penghapusan Fasilitas
+-- Facility delete
 CREATE TRIGGER trg_facilities_delete AFTER DELETE ON facilities BEGIN
     DELETE FROM facilities_rtree WHERE id = old.rowid;
 END;
 
--- Pemicu Pembaruan Koordinat Fasilitas
+-- Facility coordinate update
 CREATE TRIGGER trg_facilities_update AFTER UPDATE ON facilities BEGIN
     DELETE FROM facilities_rtree WHERE id = old.rowid;
     INSERT INTO facilities_rtree(id, minX, maxX, minY, maxY)
@@ -300,58 +176,34 @@ CREATE TRIGGER trg_facilities_update AFTER UPDATE ON facilities BEGIN
 END;
 ```
 
----
-
-## 5. Cakupan Data Nasional Terkelola
-
-Seluruh aset geografis di bawah ini telah terverifikasi dan aktif di dalam berkas basis data `backend/data/udarasiaga.db`:
-
-```mermaid
-pie title Distribusi Fasilitas Publik Nasional di Basis Data (2.039 Titik)
-    "Sekolah (SDN, SMPN, SMAN, SMKN)" : 1332
-    "Fasilitas Kesehatan (RSUP, RSUD, Puskesmas)" : 628
-    "Bandar Udara (Komersial & Perintis)" : 79
-```
-
-### Rekapitulasi Metrik Aset
-
-1. **Gunung Api Aktif**: 70 unit.
-   - Sumber: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) - Badan Geologi Kementerian ESDM RI.
-   - Cakupan: 100% gunung api aktif tipe A di Sumatera, Jawa, Bali, Nusa Tenggara, Sulawesi, dan Maluku.
-2. **Kawasan Hutan & Lahan Gambut**: 36 unit.
-   - Sumber: Kementerian Lingkungan Hidup dan Kehutanan (KLHK) & Badan Restorasi Gambut dan Mangrove (BRGM).
-   - Fitur spasial: Menyimpan poligon batas riil beresolusi tinggi untuk evaluasi irisan titik api (*Point-in-Polygon* via pustaka Shapely).
-3. **Fasilitas Pendidikan**: 1.332 unit.
-   - Sumber: Basis data referensi Kemendikbudristek & Dokumen Kontinjensi Evakuasi BPBD.
-   - Tipologi: SMAN 1, SMAN 2, SMKN 1, SMPN 1, dan SDN 01 di seluruh 38 provinsi dan kabupaten/kota strategis.
-4. **Fasilitas Pelayanan Kesehatan**: 628 unit.
-   - Sumber: SIRS Online Kementerian Kesehatan RI.
-   - Tipologi: RSUP rujukan respirasi nasional, RSUD rujukan kabupaten lingkar bencana, dan Puskesmas ring-1 tanggap darurat.
-5. **Bandar Udara**: 79 unit.
-   - Sumber: Direktorat Jenderal Perhubungan Udara Kemenhub RI & ICAO/IATA.
-   - Cakupan: Dari Bandar Udara Maimun Saleh (Sabang) hingga Bandar Udara Mopah (Merauke).
-6. **Titik Api Aktif Satelit**: 1.680 titik.
-   - Sumber: NASA FIRMS Near Real-Time (VIIRS 375m & MODIS).
+The same pattern exists for `volcanoes` and `forests`; `hotspots` has insert and delete triggers.
 
 ---
 
-## 6. Verifikasi Kinerja & Hasil Tolok Ukur (Benchmark)
+## 5. National data coverage
 
-Rangkaian pengujian otomatis pada berkas [tests/test_database.py](file:///c:/Users/arya4/JOINTS2026/backend/tests/test_database.py) memverifikasi metrik operasional berikut:
+Verified counts in the database file on 2026-10-10:
 
 ```mermaid
-gantt
-    title Latensi Rata-rata Operasi Basis Data UdaraSiaga
-    dateFormat X
-    axisFormat %s ms
-    section Operasi Basis Data
-    Kueri BBOX R*Tree Fasilitas (Jawa Barat) : 0, 1
-    Kueri Detail Gunung Api per ID          : 0, 1
-    Kueri Batas Poligon Hutan GeoJSON       : 0, 2
-    Kueri Titik Api Satelit Nasional        : 0, 2
-    Inisialisasi & Seeding Seluruh DB       : 0, 110
+pie title Public facilities in the database (992 points)
+    "Schools" : 583
+    "Health facilities" : 330
+    "Airports" : 79
 ```
 
-* **Kecepatan Kueri Spasial R\*Tree**: 0,4 hingga 1,8 milidetik untuk memfilter area metropolitan padat penduduk.
-* **Ukuran Berkas Fisik**: 1,09 megabita untuk menampung seluruh 2.039 fasilitas nasional, 70 gunung api, 36 hutan, dan 1.680 titik api satelit.
-* **Hasil Pengujian Otomatis**: 37 dari 37 pengujian unit (`pytest`) lulus 100% tanpa kesalahan linter (`ruff`).
+1. **Active volcanoes: 70.** Source: PVMBG (Centre for Volcanology and Geological Hazard Mitigation), Geological Agency, Ministry of Energy and Mineral Resources. Covers type-A active volcanoes in Sumatra, Java, Bali, Nusa Tenggara, Sulawesi and Maluku.
+2. **Forest and peatland areas: 36.** Stored with boundary polygons for point-in-polygon checks of hotspots (Shapely).
+3. **Schools: 583.**
+4. **Health facilities: 330** (hospitals and community health centres).
+5. **Airports: 79**, from Sabang to Merauke.
+6. **Satellite fire hotspots: 4,248**, from NASA FIRMS (VIIRS 375 m and MODIS), grouped by event preset.
+
+> Earlier versions of this document said 2,039 facilities and 1,680 hotspots. Those numbers didn't match the database file and have been corrected. Facility source lists are described in [`DATASETS.md`](DATASETS.md).
+
+---
+
+## 6. Performance verification
+
+`tests/test_database.py` checks the database layer: bounding-box queries, lookups by id, forest polygons and seeding.
+- The full suite (`pytest -q`) reported **40 passed** on 2026-10-10.
+- Spatial bounding-box queries typically complete in about a millisecond on a laptop. Treat this as indicative, not as a benchmark.

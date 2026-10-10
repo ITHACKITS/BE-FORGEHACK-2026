@@ -1,8 +1,9 @@
 """
 app/core/config.py
 
-Konfigurasi aplikasi dan pemuat file asumsi & bahaya.
-Menghindari kebocoran kunci API dan memastikan status asumsi tercatat.
+Application settings and loaders for the assumption and hazard files.
+Settings come from environment variables; a local `.env` is loaded first if present.
+API keys are read here and never logged or returned.
 """
 
 import os
@@ -10,34 +11,61 @@ from pathlib import Path
 from typing import Any, Dict
 
 import yaml
+from dotenv import load_dotenv
+
+from app.core.offline import is_offline
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Variables already set in the environment take precedence over `.env`.
+load_dotenv(BACKEND_DIR / ".env", override=False)
+
 CONFIG_DIR = BACKEND_DIR / "config"
 DATA_DIR = BACKEND_DIR / "data"
 EVENTS_DIR = DATA_DIR / "events"
 RUNS_DIR = DATA_DIR / "runs"
 DOCS_DIR = BACKEND_DIR / "docs"
 
-# Buat folder penting
+# Make sure the run output folder exists
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Facility types the API serves. Schools and healthcare rows stay in SQLite but are no
+# longer part of the product (team decision 2026-10-10), so every read path filters on this.
+PUBLIC_FACILITY_TYPES: tuple[str, ...] = ("airport",)
+
+
+def _split_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 
 class Settings:
-    PROJECT_NAME: str = "UdaraSiaga"
+    PROJECT_NAME: str = "Standbai"
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api"
     DESCRIPTION: str = (
-        "Simulator sebaran abu gunung meletus dan asap kebakaran hutan "
-        "untuk Hackathon JOINTS UGM 2026. Aplikasi ini simulasi untuk kesiapsiagaan, BUKAN peringatan resmi."
+        "Standbai forecasts where wildfire smoke and volcanic ash will travel over Indonesia "
+        "and what families should prepare before it arrives. A tool for learning and preparing, "
+        "not an official warning."
     )
-    OFFLINE: bool = os.environ.get("UDARASIAGA_OFFLINE", "1") == "1"
     FIRMS_MAP_KEY: str | None = os.environ.get("FIRMS_MAP_KEY")
     OPENAQ_API_KEY: str | None = os.environ.get("OPENAQ_API_KEY")
+    AI_SERVICE_URL: str = os.environ.get("AI_SERVICE_URL", "http://localhost:8001")
+    AI_INTERNAL_TOKEN: str | None = os.environ.get("AI_INTERNAL_TOKEN")
+    JOB_TOKEN: str | None = os.environ.get("JOB_TOKEN")
+    N8N_ALERT_WEBHOOK_URL: str | None = os.environ.get("N8N_ALERT_WEBHOOK_URL")
+    N8N_WEBHOOK_SECRET: str | None = os.environ.get("N8N_WEBHOOK_SECRET")
+    CORS_ORIGINS: list[str] = _split_csv(os.environ.get("CORS_ORIGINS", "http://localhost:5173"))
+    PUBLIC_APP_URL: str = os.environ.get("PUBLIC_APP_URL", "http://localhost:5173")
+    USER_AGENT: str = "Standbai/1.0 (+https://github.com/ITHACKITS/BE-FORGEHACK-2026)"
 
     DISCLAIMER: str = (
-        "Sistem ini adalah platform estimasi sains untuk kesiapsiagaan dini & protokol aksi pencegahan bencana. "
-        "Untuk koordinasi evakuasi otoritatif di lapangan, tetap rujuk arahan resmi PVMBG Badan Geologi, BMKG, dan BPBD."
+        "Not an official warning. Follow BMKG, PVMBG and your local BPBD. "
+        "Standbai is a science-based estimate for learning and preparing."
     )
+
+    @property
+    def OFFLINE(self) -> bool:
+        return is_offline()
 
 
 settings = Settings()
@@ -70,8 +98,8 @@ def get_hazards() -> Dict[str, Any]:
 
 def get_assumptions_used(keys: list[str] | None = None) -> list[Dict[str, Any]]:
     """
-    Mengembalikan daftar parameter yang dipakai yang belum berstatus 'sourced' murni,
-    atau seluruh parameter terkait jika keys ditentukan.
+    Return the parameters used together with their evidence status,
+    restricted to `keys` when given.
     """
     assumptions = get_assumptions()
     result = []
@@ -96,8 +124,8 @@ get_assumptions_list = get_assumptions_used
 
 def is_pm25_emission_factor_sourced() -> bool:
     """
-    Prinsip 11 AGENTS.md:
-    Kategori ISPU hanya dihitung bila faktor emisi PM2.5 (D13b) berstatus sourced*.
+    AGENTS.md principle 11: engine-derived ISPU categories are computed only
+    when the PM2.5 emission factor (D13b) has a `sourced*` status.
     """
     assumptions = get_assumptions()
     ef_item = assumptions.get("emission_factor_pm25_g_per_kg", {})
