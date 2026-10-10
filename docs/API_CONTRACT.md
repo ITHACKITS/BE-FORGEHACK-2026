@@ -36,7 +36,10 @@ Status checked against the routers on `feat/be-implementation`, 2026-10-10: **31
 | Events | `GET` | `/events/{event_id}` | Geographic metadata, elevation, coordinates and data status of an event | Implemented |
 | Map layers | `GET` | `/layers/volcanoes-national` | 70 active PVMBG volcanoes (GeoJSON) | Implemented (via `/layers/{name}`) |
 | Map layers | `GET` | `/layers/forests-national` | 36 forest and conservation areas (JSON) | Implemented (via `/layers/{name}`) |
-| Map layers | `GET` | `/layers/facilities` | Public facilities (schools, health facilities, airports) in a bbox | Implemented |
+| Map layers | `GET` | `/layers/facilities` | Public facilities in a bbox: **airports only** since 2026-10-10 (school and healthcare rows stay in SQLite but are not served) | Implemented |
+| Map modes | `GET` | `/layers/wind?level=10m\|850hPa&hours=0..384` | National wind u/v on a 2° grid, 3-hourly, now → +16 days (Open-Meteo; offline snapshot) | Implemented |
+| Map modes | `GET` | `/layers/heatmap?kind=fires&days=1..7` | FIRMS detections per 0.25° cell (count, summed FRP), window ending on the latest detection date | Implemented |
+| Map modes | `GET` | `/layers/smoke-paths?hours=24..72` | Forward wind trajectories from the 15 strongest fire clusters (10 m) and Level II+ volcanoes (850 hPa) | Implemented |
 | Map layers | `GET` | `/layers/hotspots?event_id={id}` | NASA FIRMS hotspot clusters (VIIRS and MODIS) | Implemented |
 | Map layers | `GET` | `/layers/coastline` | High-resolution archipelago coastline (GeoJSON) | Implemented |
 | Telemetry | `GET` | `/layers/summary-kpi` | National KPIs (volcanoes per level, total hotspots) | Implemented |
@@ -45,8 +48,8 @@ Status checked against the routers on `feat/be-implementation`, 2026-10-10: **31
 | Simulation (L1) | `GET` | `/runs/{run_id}` | Status and metadata of a run | Implemented |
 | Simulation (L1) | `GET` | `/runs/{run_id}/tiers?t={hour}` | GeoJSON tier polygons (max ≥5%, mid ≥50%, min ≥90%) for T+0…T+48 | Implemented |
 | Simulation (L1) | `GET` | `/runs/{run_id}/particles` | Individual particle coordinates for inspection | **Not implemented** |
-| Impact (L1) | `GET` | `/runs/{run_id}/impact` | Aggregate impact as `{min, median, max}` (people and facilities) | Implemented |
-| Impact (L1) | `GET` | `/runs/{run_id}/facilities-impacted` | Exposed facilities with probability, ETA and recommendation | Implemented |
+| Impact (L1) | `GET` | `/runs/{run_id}/impact` | Aggregate impact as `{min, median, max}` (people, children, elderly, area, airports) | Implemented |
+| Impact (L1) | `GET` | `/runs/{run_id}/facilities-impacted` | Exposed airports with probability, ETA and aviation action | Implemented |
 | Impact (L1) | `GET` | `/runs/{run_id}/location/{facility_id}` | Decision card for one facility | Implemented |
 | Impact (L1) | `GET` | `/runs/{run_id}/district-summaries` | Impact per affected district | **Not implemented** |
 | Analysis (L2) | `GET` | `/runs/{run_id}/ranking` | Fire clusters ranked by population-exposure risk | Implemented |
@@ -539,6 +542,46 @@ sequenceDiagram
 > The current code uses the keys `gemini_briefing` and `whatsapp_broadcast` (`app/impact/advisory.py`, `app/impact/gemini_advisory.py`). `llm_briefing` and `public_broadcast` above are the target names for BE-03/BE-04; keep the old keys until the frontend switches. The `remote_learning_mandate` field shown here is documentation only and isn't produced by the code on `main`.
 
 ---
+
+### 3.21 National map modes: `GET /layers/wind`, `/layers/heatmap`, `/layers/smoke-paths`
+
+Read-only. Inputs are enums and bounded integers; anything else returns 422. Responses are gzip-compressed.
+
+**`GET /layers/wind?level=10m&hours=72`**
+- Source: Open-Meteo forecast API, multi-location requests on a 2° grid over 94–142° E, 11° S–6° N (25 × 9 = 225 points), hourly `wind_speed_{10m,850hPa}` and `wind_direction_{10m,850hPa}`, `forecast_days=16`, resampled to 3-hourly.
+- Cached in memory for 3 h. With `STANDBAI_OFFLINE=1` or an upstream failure, `data/layers/wind_grid_snapshot.json` is served (`origin: "snapshot"`); regenerate it with `python scripts/generators/snapshot_wind_grid.py`.
+- `u[t][cell]` and `v[t][cell]` in m/s (u towards east, v towards north), `cell = i_lat * nlon + i_lon`, counted from `grid.lat0`/`grid.lon0`.
+
+```json
+{
+  "available": true, "origin": "live", "stale": false, "is_example": false,
+  "level": "10m", "units": "m/s", "step_hours": 3,
+  "grid": {"lat0": -11.0, "lon0": 94.0, "dlat": 2.0, "dlon": 2.0, "nlat": 9, "nlon": 25},
+  "times": ["2026-10-10T12:00Z", "2026-10-10T15:00Z"],
+  "u": [[-1.2, -0.8]], "v": [[0.4, 0.9]],
+  "note": "Forecast skill drops after about 7 days; days 8 to 16 are indicative."
+}
+```
+
+**`GET /layers/heatmap?kind=fires&days=7`**
+- Hotspots from the `hotspots` table grouped into 0.25° cells. The window ends on the latest stored detection (`as_of`), not on today, so the age of the data is explicit.
+
+```json
+{"available": true, "cell_deg": 0.25, "window_start": "2026-09-30", "as_of": "2026-10-06",
+ "max_count": 301, "max_frp_sum": 7148.0,
+ "cells": [{"lat": -3.125, "lon": 111.875, "count": 301, "frp_sum": 7148.0}]}
+```
+
+**`GET /layers/smoke-paths?hours=72`**
+- RK2 trajectories, one-hour steps, through the wind grid. Fire smoke follows 10 m wind; volcanic ash follows 850 hPa (about 1.5 km). Lines show where the centre of a plume drifts, not its width or concentration.
+
+```json
+{"available": true, "hours": 72, "start_time": "2026-10-10T12:00Z", "marks_every_h": 24,
+ "fires_as_of": "2026-10-06", "stale": false,
+ "note": "Model estimate, not an official warning. ...",
+ "paths": [{"source_type": "volcano", "name": "G. Lewotobi Laki-laki", "level": 3, "wind_level": "850hPa",
+            "source": {"lat": -8.538, "lon": 122.768}, "coords": [[-8.538, 122.768], [-8.49, 122.61]]}]}
+```
 
 ## 4. Planned endpoints (see `../PRD.md`)
 

@@ -495,6 +495,11 @@ The Telegram bot (BE-11) is **not** needed by the web app. It's a headline featu
 | BE-15 | History + news | Arya | P1 | To do (likely cut) |
 | BE-16 | `/health` details | Hikari | P0 | To do |
 | BE-17 | Final checks | Hikari, Arya | P0 | To do |
+| BE-18 | Remove schools and healthcare from the API (airports stay) | Hikari | P0 | **Done** (18:30) |
+| BE-19 | `/layers/wind` national wind grid, 16 days | Hikari | P0 | **Done** (18:40) |
+| BE-20 | `/layers/heatmap` fire heatmap | Hikari | P0 | **Done** (18:40) |
+| BE-21 | `/layers/smoke-paths` smoke and ash trajectories | Hikari | P0 | **Done** (18:40) |
+| BE-22 | 5-year history and seasonal outlook (wind climatology, fire history, volcano history) | Hikari, Arkan | P1 | To do (after submission) |
 
 ### BE-00 Redeem sponsor perks (P0)
 - **Owner:** Hikari · **Est.:** 10 min
@@ -637,3 +642,34 @@ The Telegram bot (BE-11) is **not** needed by the web app. It's a headline featu
   - `pytest -q` and `ruff check .` pass;
   - `scripts/validate_live_api.py <url>` is green;
   - README "Status" updated to the truth.
+
+### BE-18 Remove schools and healthcare from the API (P0, done)
+- **Decision (2026-10-10):** schools and hospitals are no longer part of StandbAI. Rows stay in SQLite (easy to restore, no migration); the API serves airports only.
+- **How:** `PUBLIC_FACILITY_TYPES = ("airport",)` in `app/core/config.py`, applied in `FacilityRepository` (every read) and in the `OverpassIngest` JSON and demo fallbacks. `exposure.py` counts and lists airports only; advisory alert level now uses the exposed population; runs saved before the change are cleaned on read (`strip_removed_impact`, `strip_removed_facilities`).
+- **Removed fields:** `schools_exposed`, `healthcare_exposed`, `schools`, `healthcare`, `evacuation_referral_hospitals`, `nearest_safe_hospital`, `school_guidance`, `health_guidance`, `schools_count`, `healthcare_count`, `schools_saved`, `schools_exposed_diff` (now `airports_exposed_diff`).
+- **Tests:** `test_facilities_endpoint_serves_airports_only`, `test_facilities_impacted_lists_airports_only`.
+
+### BE-19 – BE-21 National map modes (P0, done)
+- Contract: `docs/API_CONTRACT.md` §3.21. Code: `app/services/weather_grid.py`, `app/services/map_modes.py`, `app/api/map_modes.py` (registered before `/layers/{name}`); GZip on responses ≥ 2 KB.
+- **Wind:** Open-Meteo forecast, 2° grid, 10 m and 850 hPa, 3-hourly, now → +16 days. 3 h memory cache; offline snapshot `data/layers/wind_grid_snapshot.json` (regenerate with `scripts/generators/snapshot_wind_grid.py`). About 270 Open-Meteo call units per refresh, so at most about 2,200 per day.
+- **Heatmap:** stored FIRMS detections per 0.25° cell; window ends on the latest detection (`as_of`).
+- **Smoke paths:** RK2 trajectories from the 15 strongest fire cells and Level II+ volcanoes, 24–72 h, labelled "model estimate, not an official warning".
+- **Tests:** `tests/test_map_modes.py` (shapes, validation 422s, stale snapshots, path sources).
+
+### Data ranges (verified 2026-10-10 18:45 WIB)
+
+| Data | What the backend has now | Target (BE-22) |
+|---|---|---|
+| FIRMS hotspots | 4,248 detections from 2026-10-05 and 10-06 only | Live 7 days (BE-08) plus monthly 0.25° history 2021–2025 |
+| Wind | National grid, now → +16 days (BE-19); per-event 48 h snapshots for the engine | Monthly wind climatology 2021–2025 (ERA5 via the Open-Meteo archive) |
+| Simulation engine | 48 h cap, single-point wind per run | Unchanged today |
+| Volcanoes | 70 rows with current level; no eruption history | Curated eruption list 2021–2026 with sources |
+| Fire outlook | None | AI-06 Part A monthly climatology from FIRMS 2020–2025 |
+
+**Forecast horizon rule:** wind and smoke forecasts are shown up to 16 days, with days 8–16 labelled indicative. Beyond that, only "typical conditions for this month" from 5-year climatology, labelled as such. No 5-year-ahead wind or smoke predictions: there is no forecast skill at that range.
+
+### BE-22 5-year history and seasonal outlook (P1, after submission)
+- **Wind climatology:** `scripts/generators/build_wind_climatology.py` reads the Open-Meteo archive (ERA5, daily dominant direction and mean speed) per grid point for 2021–2025 in batches that respect the rate limit, and writes monthly mean u/v to `data/climate/wind_monthly_2021_2025.json`. Endpoint `GET /layers/wind/climatology?month=1..12`.
+- **Fire history:** reuse AI-06 Part A's cell × week aggregation of the Kaggle FIRMS VIIRS 2020–2025 archive (Arkan); export monthly 0.25° counts to `data/history/fire_monthly_cells.json`. Endpoints `GET /layers/heatmap?kind=fires_history&year=&month=` and `kind=fire_climatology&month=` ("typical for this month").
+- **Volcano history:** curated `data/history/volcano_events_2021_2026.json` (date, volcano, column height, source URL, `status: to_verify`) from Smithsonian GVP and MAGMA/PVMBG; `GET /volcanoes/{id}/history`.
+- **Acceptance:** every history and climatology response states its period and source; the FE slider shows "Typical for <month> (2021–2025)" after day 16.
